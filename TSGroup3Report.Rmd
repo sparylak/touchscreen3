@@ -1,0 +1,327 @@
+---
+title: "TSGroup3Report"
+author: "SLP"
+date: "Thursday, October 23, 2014"
+output: html_document
+---
+
+Touchscreen Group 3 Performance
+========================================================
+
+```{r set-options, echo = FALSE, cache = FALSE}
+options(width = 100)
+```
+####Updated 10/22/14
+Changes since previous update:
+-Added support for MatchLocationDouble schedule.
+
+
+####Updated 10/13/14
+Changes since previous update:
+-Added support for NonMatchLocationSingle and NonMatchLocationDouble schedules.  Added error check for whether number of correction and correct corrections are nonzero.
+
+####Updated 9/29/14
+Changes since previous update:
+-Modified to include ONLY hard trials if schedule is NonMatchTripleEasyHard or NonMatchFullEasyHard.  Easy trials are ignored for total trial count and percent correct.  Center touches ARE included, even if on easy trials.
+
+
+Analysis requires data from 2 sources, and formatting is restricted.
+
+1. ABETII event total output: Event totals from each daily session must be present in the working directory of this script in a folder called "raw".  Session files must be named as |4DigitYear||2DigitMonth||2DigitDay||Set1-3|_Group3.csv.  Verify manually that session info is deleted from the header of the csv files.  Headers should appear in row 2.
+
+2. Schedule sheet: A csv file Data Summary.csv containing the Date, RunDay, Mouse, and Schedule info for each session must be in the working directory.  These must be updated manually to reflect decisions to move mice between schedules.
+
+Mouse identities in the ABETII event total sheet are assumed to be, from leftmost to rightmost column:
+
+- Set 1: 1 to 4
+- Set 2: 5 to 8
+- Set 3: 9 to 12
+
+Any changes to these identities (e.g. due to box failures that require running elsewhere) should be manually adjusted in the output files themselves and noted prior to analysis.
+
+At present only PunishIncorrect and above schedules can be analyzed.  Initial Touch and Must Touch will appear in the output csv files as all zero  or missing values.
+
+### Take inventory of files in raw directory and extract dates to report on.
+
+```{r}
+# determine files to use
+filestouse <- list.files(path = "raw/", pattern = "csv")
+# Strip dates and set information from raw output files
+datestouse <- unique(as.Date(gsub("Set[1-3]_Group3.csv|Set[1-3].csv", "", filestouse), format = "%Y%m%d"))
+print(filestouse)
+print(datestouse)
+```
+
+### Extract schedule information from manually updated Data Summary sheet.
+
+```{r}
+# Read in manually entered data for date, mouseid, and schedule
+schedinfo <- read.csv(file = "Data Summary.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+#Reformat scheduleinfo dates
+schedinfo$Date <- as.Date(schedinfo$Date, format = "%m/%d/%Y")
+schedtrim <- schedinfo[schedinfo$Date %in% datestouse ,1:4]
+#Mice are not integers
+schedtrim$Mouse <- as.character(schedtrim$Mouse)
+#Print extracted info for first day
+print(head(schedtrim,12))
+#Print extracted info for last day
+print(tail(schedtrim,12))
+
+#Generate list of schedules contained in data range of files
+schedulestouse <- schedtrim[(schedtrim$Date %in%datestouse), 4]
+completesched <- c("NonMatchtoX", "NonMatchtoO", "NonMatchInitiateSingle", "NonMatchSingle2", "NonMatchCenter", "NonMatchTripleDisplay", "NonMatchInitiateCenter", "NonMatchInitiateTriple", "NonMatchInitiateFull", "MatchInitiateTriple", "MatchInitiateFull")
+locationsched <- c("MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble")
+easyhardsched <- c("NonMatchTripleEasyHard", "NonMatchFullEasyHard")
+pretrainingsched <- c("PunishIncorrect", "PunishInc")
+```
+
+### Loop through files in raw directory and extract information on correct, incorrect, and correction trials.
+
+```{r}
+##Create empty data frame with named columns for data to be extracted
+abet1keep <- data.frame(filesource = as.character(), totalcorrect = integer(), incorrect = integer(), corrtrials = integer(), correctcorr = integer(), centerincorrect = integer())
+##Start schedule index at 1
+schedindex <- 1
+
+##Loop through filestouse one session at a time
+    for(fil in filestouse) {
+        ##Start with empty data frame formatted for 4 mice
+        abet1trim <- data.frame(filesource = rep(as.character("TBD"),4), totalcorrect = rep(0,4), incorrect = rep(0,4), corrtrials = rep(0,4), correctcorr = rep(0,4), centerincorrect = rep(0,4)) 
+        ##Read in abet generated csv file
+        ##If session info is present, can change to skip = 14 to get everything to run
+        abetdata1 <- read.csv(file = paste("raw/",fil, sep=""), sep = ',', skip = 1, header = TRUE)
+        ##Populate empty data frame with abet generated data
+        abet1trim$filesource = as.character(fil)
+        ##Pull different variables depending on schedule
+        colindex <- 6
+        for (rowindex in 1:4) {
+            if (schedulestouse[schedindex] %in% completesched) {
+            ##correct
+            abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == 
+                    "Reward Collected Start ITI",colindex], mode = "numeric")
+            ##incorrect
+            abet1trim$incorrect[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                   "Incorrect",colindex], mode = "numeric")
+            ##corrtrials
+            abet1trim$corrtrials[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                "Total_No_Correction_Trials",colindex], mode = "numeric")
+            ##correctcorr
+            abet1trim$correctcorr[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                 "Correction_Trial_Correct_Counter",colindex], mode = "numeric")
+            ##centerincorrect - if variable exists then pull data from sheet, else set to 0
+            if (sum(abetdata1$Item_Name == "CenterTouch") > 0) {
+                abet1trim$centerincorrect[rowindex] <-as.vector(abetdata1[abetdata1$Item_Name == "CenterTouch",colindex], mode = "numeric")
+            } else {
+                abet1trim$centerincorrect[rowindex] <-as.vector(0, mode = "numeric")
+            }
+            ##Increment counters to move to next session
+            colindex <- colindex + 1
+            schedindex <- schedindex + 1
+                
+            } else if (schedulestouse[schedindex] %in% pretrainingsched) {
+            ##correct
+            abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == 
+                    "Reward Collected Start ITI",colindex], mode = "numeric")
+            ##incorrect
+            abet1trim$incorrect[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                   "Incorrect",colindex], mode = "numeric")
+            ##corrtrials obviously doesn't exist if schedule doesn't include corrections, set to 0
+            abet1trim$corrtrials[rowindex]  <-as.vector(0, mode = "numeric")
+            ##correctcorr also doesn't exist if schedule doesn't include corrections, set to 0
+            abet1trim$correctcorr[rowindex]  <-as.vector(0, mode = "numeric")
+            ##Increment counters to move to next session
+            colindex <- colindex + 1
+            schedindex <- schedindex + 1
+            
+            } else if (schedulestouse[schedindex] %in% easyhardsched) {
+            ##correct
+            abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == 
+                    "CorrectHardTrials",colindex], mode = "numeric")
+            ##incorrect
+            abet1trim$incorrect[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                   "TotalHardTrials",colindex] - abetdata1[abetdata1$Item_Name == 
+                   "CorrectHardTrials",colindex], mode = "numeric")
+            ##corrtrials - assumption is made that all incorrect trials lead to a correction trial.
+            ##May be off by one from the Total_No_Correction_Trials counter
+            abet1trim$corrtrials[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                   "TotalHardTrials",colindex] - abetdata1[abetdata1$Item_Name == 
+                   "CorrectHardTrials",colindex], mode = "numeric")
+            ##correctcorr
+            abet1trim$correctcorr[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                 "CorrectCorrectionsHard",colindex], mode = "numeric")
+            ##centerincorrect - if variable exists then pull data from sheet, else set to 0
+            if (sum(abetdata1$Item_Name == "CenterTouch") > 0) {
+                abet1trim$centerincorrect[rowindex] <-as.vector(abetdata1[abetdata1$Item_Name == "CenterTouch",colindex], mode = "numeric")
+            } else {
+                abet1trim$centerincorrect[rowindex] <-as.vector(0, mode = "numeric")
+            }            
+            ##Increment counters to move to next session
+            colindex <- colindex + 1
+            schedindex <- schedindex + 1            
+            } else if (schedulestouse[schedindex] %in% locationsched) {
+            ##correct
+            abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == 
+                    "Reward Collected Start ITI",colindex], mode = "numeric")
+            ##incorrect
+            abet1trim$incorrect[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                   "Incorrect",colindex], mode = "numeric")
+            ##corrtrials 
+            if (sum(abetdata1$Item_Name == "Total_No_Correction_Trials") > 0) {
+                abet1trim$corrtrials[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                   "Total_No_Correction_Trials",colindex], mode = "numeric")
+            } else {
+                abet1trim$corrtrials[rowindex]  <-as.vector(0, mode = "numeric")
+            }            
+            ##correctcorr
+            if(sum(abetdata1$Item_Name == "Correction_Trial_Correct_Counter") > 0) {
+                abet1trim$correctcorr[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
+                 "Correction_Trial_Correct_Counter",colindex], mode = "numeric")
+                } else {
+                   abet1trim$correctcorr[rowindex]  <-as.vector(0, mode = "numeric") 
+                }
+                
+            ##Increment counters to move to next session
+            colindex <- colindex + 1
+            schedindex <- schedindex + 1            
+            } else {
+            ## If not one of the above schedules, set EVERYTHING except total correct trials to zero.  This is either Initial Touch, Must Touch, or some improperly named schedule that you should notice and fix.
+            ##correct
+            abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == "_Trial_Counter",colindex], mode = "numeric")
+            ##incorrect
+            abet1trim$incorrect[rowindex]  <-as.vector(0, mode = "numeric")
+            ##corrtrials
+            abet1trim$corrtrials[rowindex]  <-as.vector(0, mode = "numeric")
+            ##correctcorr
+            abet1trim$correctcorr[rowindex]  <-as.vector(0, mode = "numeric")
+            ##Increment counters to move to next session
+            colindex <- colindex + 1
+            schedindex <- schedindex + 1
+            }
+            }
+            abet1keep <- rbind(abet1keep,abet1trim)
+            
+        }
+    
+    
+##Bind schedule info to abet output
+setalltrim <- cbind(schedtrim,abet1keep)
+##Print bound info for first day
+print(head(setalltrim,12))
+#Print bound info for last day
+print(tail(setalltrim,12))
+```
+
+### Calculate summary measures including percent correct for both correction and non-correction trials
+```{r}
+##Set NA values to zero before you calculate summary measures
+setalltrim[is.na(setalltrim)] <- 0
+##totaltrials
+setalltrim$totaltrials <- (setalltrim$totalcorrect + setalltrim$incorrect)
+##noncorrtrials
+setalltrim$noncorrtrials <- (setalltrim$totaltrials - setalltrim$corrtrials)
+##incorrectcorr
+setalltrim$incorrectcorr <- (setalltrim$corrtrials - setalltrim$correctcorr)
+##firstcorr
+setalltrim$firstcorr <- (setalltrim$totalcorrect - setalltrim$correctcorr)
+##firstincorr
+setalltrim$firstincorr <- (setalltrim$incorrect - setalltrim$incorrectcorr)
+##corrperincorrect
+setalltrim$corrperincorrect <- (setalltrim$corrtrials)/(setalltrim$firstincorr)
+##percentall
+setalltrim$percentall <- 100*(setalltrim$totalcorrect)/(setalltrim$totaltrials)
+##percentfirst
+setalltrim$percentfirst <- 100*(setalltrim$firstcorr)/(setalltrim$noncorrtrials)
+##percentcorr
+setalltrim$percentcorr <- 100*(setalltrim$correctcorr)/(setalltrim$corrtrials)
+
+##Print summary measures for first day
+print(head(setalltrim,12))
+##Print summary measures for last 2 days
+print(tail(setalltrim,24))
+```
+
+### Export summary measure output to new csv file
+
+Cleaned data with summary measures will be output to the output folder of the current working directory.  If this directory doesn't exist, you'll need to create it first.  Files created on the same DATE will be overwritten.
+
+```{r}
+write.csv(setalltrim, file = paste("output/",Sys.Date(),".output.csv", sep=""), row.names = FALSE)
+```
+
+###Output graph of percent correct over all trials since beginning of training
+
+```{r}
+library(ggplot2)
+library(RColorBrewer)
+g<- ggplot(setalltrim, aes(x= Date, y = percentall, group = Mouse))
+p<- g + geom_line(aes(color = Mouse), size = 1.5) + scale_colour_brewer(type = "qual", palette = "Paired") + geom_hline(aes(yintercept = 85), size = 1.5)
+print(p)
+```
+
+###output graph of percent correct for just the most recent 3 days
+```{r}
+last3days <- setalltrim$Date %in% tail(setalltrim$Date,36)
+setall3 <- setalltrim[last3days,]
+g<- ggplot(setall3, aes(x= Date, y = percentall, group = Mouse))
+p<- g + geom_point(aes(color = Schedule), size = 4) + geom_line(aes(color = Schedule), size = 1.5) + scale_colour_brewer(type = "qual", palette = "OrRd") + geom_hline(aes(yintercept = 85), size = 1.5) + facet_wrap(~ Mouse)
+print(p)
+```
+
+###output individual graphs of number of trials completed by mouse, colored by schedule
+```{r}
+setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble", "NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"))
+for (mouseid in 1:12){
+    setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
+gmouseid <- ggplot(setallmouseid, aes(x = Date, y = totaltrials))
+pmouseid <- gmouseid + geom_point(aes(color = Schedule), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle(paste("Mouse",mouseid, sep = " ")) + coord_cartesian(ylim = c(0,105))
+    print(pmouseid)
+}
+```
+
+###output graph of percent correct for each mouse individually, colored by schedule
+```{r}
+for (mouseid in 1:12){
+    setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
+    gmouseid2 <- ggplot(setallmouseid, aes(x = Date, y = percentall))
+    pmouseid2 <- gmouseid2 + geom_point(aes(color = Schedule), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle(paste("Mouse",mouseid, sep = " ")) + coord_cartesian(ylim = c(0,105))
+    print(pmouseid2)
+}
+```
+
+###output number of incorrect responses to center square for each mouse, colored by schedule
+```{r}
+for (mouseid in 1:12){
+    setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
+    gmouseid3 <- ggplot(setallmouseid, aes(x = Date, y = centerincorrect))
+    pmouseid3 <- gmouseid3 + geom_point(aes(color = Schedule), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle(paste("Mouse",mouseid, sep = " ")) + coord_cartesian(ylim = c(0,50))
+    print(pmouseid3)
+}
+```
+
+### Summarize number of days spent on each schedule
+```{r}
+scheddf<- data.frame(Mouse = rep(1:12, 18), Schedule = rep(c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble", "NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"), each = 12), DaysNeeded = as.integer(NA))
+for (mouseid in 1:12){
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "Initial Touch", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "Initial Touch")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "Must Touch", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "Must Touch")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "PunishInc", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "PunishInc")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchSingle2", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchSingle2")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateSingle")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationSingle")    
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationSingle")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationDouble", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationDouble")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationDouble", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationDouble")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchCenter", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchCenter")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateCenter", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateCenter")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchTripleDisplay", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchTripleDisplay")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateTriple", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateTriple")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchTripleEasyHard", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchTripleEasyHard")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateFull", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateFull")
+    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchFullEasyHard", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchFullEasyHard")
+scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchInitiateTriple", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchInitiateTriple")
+scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchInitiateFull", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchInitiateFull")
+    }     
+scheddf[scheddf$DaysNeeded == 0,3] <- NA
+print(scheddf)
+#Note can use summary(scheddf[scheddf$Schedule == "PunishInc",]) to get mean and mediam number of days spent on #PunishInc or any other schedule of interest
+```
