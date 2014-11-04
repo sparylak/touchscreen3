@@ -15,8 +15,8 @@ Files to use are pulled from a subfolder "raw" under the directory:
 and all schedule information (NonMatch vs. NonMatchEasy-Hard vs. Match) is currently ignored.  Complete sets of mice are not required, as each session is processed individually.
 
 ```{r}
-filestouse <- list.files(path = "raw/", pattern = "csv")
-datestouse <- unique(as.Date(gsub("Mouse[1-12].csv", "", filestouse), format = "%Y%m%d"))
+filestouse <- list.files(path = "../StimulusConfigData/", pattern = "raw.csv")
+datestouse <- unique(as.Date(gsub("Mouse[1-12]raw.csv", "", filestouse), format = "%Y%m%d"))
 dfkeep <- data.frame(date = {}, mouse = {}, grid = {}, image = {}, correct = {}, incorrect = {})
 totalskeep <- data.frame(date = {}, mouse = {}, grid = {}, image = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
 ```
@@ -31,10 +31,10 @@ print(datestouse)
 ```{r}
 for(fil in filestouse){
         
-    ms1 <- read.csv(file = paste("raw/",fil,sep=""), header = TRUE, stringsAsFactors = FALSE)
+    ms1 <- read.csv(file = paste("../StimulusConfigData/",fil,sep=""), header = TRUE, stringsAsFactors = FALSE)
     numrows <- length(ms1$Item_Name)
-    mouseid <- as.integer(gsub("^[0-9]*(Mouse)|.csv","",fil))
-    sessiondate <- as.Date(gsub("Mouse[1-12].csv","", fil), format="%Y%m%d")
+    mouseid <- as.integer(gsub("^[0-9]*(Mouse)|raw.csv","",fil))
+    sessiondate <- as.Date(gsub("Mouse[1-12]raw.csv","", fil), format="%Y%m%d")
         
     gridid <- 0
     imageid <- 0
@@ -72,8 +72,8 @@ for(fil in filestouse){
     totalskeep <- rbind(totalskeep, dftotals)
 }
 ###Save output files to output directory
-write.csv(dfkeep, file = paste("output/", Sys.Date(),"rawcombooutput.csv",sep=""), row.names = FALSE)
-write.csv(totalskeep, file = paste("output/", Sys.Date(),".combooutput.csv", sep=""), row.names = FALSE)
+write.csv(dfkeep, file = paste("../output/", Sys.Date(),"rawcombooutput.csv",sep=""), row.names = FALSE)
+write.csv(totalskeep, file = paste("..output/", Sys.Date(),".combooutput.csv", sep=""), row.names = FALSE)
 ```
 
 ###Is the proportion of correct and incorrect trials equal across all side and image combinations?
