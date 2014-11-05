@@ -146,7 +146,7 @@ print(chisq.test(combotabs[2,3:4]))
 print(chisq.test(combotabs[3,3:4]))
 ```
 
-**Mice perform slightly better when the sample image is 2 (O) compared to image 1 (X).**
+**Note that for Match mice, the Correct_Grid_Position actually indicates, the foil, and the Incorrect_Grid_Position is the blank.  So the comma notation refers to the following: (ImageAppearingInChoiceOnly,ImageAppearingInSample)**
 
 ```{r fig.height = 8}
 ###Output graph of percent correct across days for all stimulus combinations split by mouse
