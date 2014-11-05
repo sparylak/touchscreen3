@@ -17,8 +17,8 @@ and all schedule information (NonMatch vs. NonMatchEasy-Hard vs. Match) is curre
 ```{r}
 filestouse <- list.files(path = "../StimulusConfigData/", pattern = "raw.csv")
 datestouse <- unique(as.Date(gsub("Mouse[1-12]raw.csv", "", filestouse), format = "%Y%m%d"))
-dfkeep <- data.frame(date = {}, mouse = {}, grid = {}, image = {}, correct = {}, incorrect = {})
-totalskeep <- data.frame(date = {}, mouse = {}, grid = {}, image = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
+dfkeep <- data.frame(date = {}, mouse = {}, correctgrid = {}, samplegrid = {}, correct = {}, incorrect = {})
+totalskeep <- data.frame(date = {}, mouse = {}, correctgrid = {}, samplegrid = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
 ```
 
 Data from the following dates will be analyzed:
@@ -41,18 +41,18 @@ for(fil in filestouse){
 
     ###generate empty data frame with number of rows based on number of correct grid positions set in file
     dfrows <- (sum(ms1$Item_Name == "Correct_Grid_Position") - 1)
-    trackerdf <- data.frame(date = rep(sessiondate,dfrows), mouse = rep(mouseid,dfrows), grid = rep(0,dfrows), image = 0, correct = 0, incorrect = 0, row.names = (1:dfrows))
-    ### skip initial 2 rows where grid position and image are set to zero
+    trackerdf <- data.frame(date = rep(sessiondate,dfrows), mouse = rep(mouseid,dfrows), correctgrid = rep(0,dfrows), samplegrid = 0, correct = 0, incorrect = 0, row.names = (1:dfrows))
+    ### Warning: grid positions will initially be set to zero
     rowindex <- 1
     ###loop through each row of csv file and fill values in empty data frame according to event type
-    for(row in 3:numrows) {
+    for(row in 1:numrows) {
         if(ms1[row, 4] == "Correct_Grid_Position") {
             gridid <- ms1[row, 9]
-            trackerdf$grid[rowindex] <- gridid
+            trackerdf$correctgrid[rowindex] <- gridid
         }
-        else if(ms1[row, 4] == "SampleImage") {
+        else if(ms1[row, 4] == "Sample_Grid_Position") {
             imageid <-ms1[row, 9]
-            trackerdf$image[rowindex] <- imageid
+            trackerdf$samplegrid[rowindex] <- imageid
         }    
         else if(ms1[row, 4] == "Correct") {
             trackerdf$correct[rowindex] <- 1
@@ -66,11 +66,16 @@ for(fil in filestouse){
     dfkeep <- rbind(dfkeep, trackerdf)
     library(plyr)
     ###summarize correct and incorrect responses session and bind to all previous sessions
-    dftotals <- ddply(trackerdf, .(date, mouse, grid, image), summarize, correcttotal = sum(correct), incorrecttotal = sum(incorrect))
+    dftotals <- ddply(trackerdf, .(date, mouse, correctgrid, samplegrid), summarize, correcttotal = sum(correct), incorrecttotal = sum(incorrect))
     dftotals$trialcount <- (dftotals$correcttotal + dftotals$incorrecttotal)
     dftotals$percent <- (dftotals$correcttotal/(dftotals$correcttotal + dftotals$incorrecttotal))
     totalskeep <- rbind(totalskeep, dftotals)
 }
+```
+
+###Save output?
+
+```{r}
 ###Save output files to output directory
 write.csv(dfkeep, file = paste("../output/", Sys.Date(),"rawcombooutput.csv",sep=""), row.names = FALSE)
 write.csv(totalskeep, file = paste("..output/", Sys.Date(),".combooutput.csv", sep=""), row.names = FALSE)
