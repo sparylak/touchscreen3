@@ -150,9 +150,9 @@ print(chisq.test(combotabs[3,3:4]))
 
 ```{r fig.height = 8}
 ###Output graph of percent correct across days for all stimulus combinations split by mouse
-bymouse <- ddply(totalskeep, .(mouse, grid, image), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
-bymouse$trialcode <- rep(c("X-Left","O-Left","X-Right","O-Right"))
-bymouse$trialcode <- factor(bymouse$trialcode, levels = c("X-Left","O-Left","X-Right","O-Right"))
+bymouse <- ddply(totalskeep, .(mouse, correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
+bymouse$trialcode <- rep(c("1,2","1,3","2,1","2,3","3,1","3,2"))
+bymouse$trialcode <- factor(bymouse$trialcode, levels = c("1,2","1,3","2,1","2,3","3,1","3,2"))
 library(ggplot2)
 g <- ggplot(bymouse, aes(x = trialcode, y = meanalldays)) + geom_point(size = 4) + coord_cartesian(ylim = c(0,1)) + facet_wrap(~ mouse, ncol = 3)
 print(g)
