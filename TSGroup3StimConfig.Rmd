@@ -78,10 +78,10 @@ for(fil in filestouse){
 ```{r}
 ###Save output files to output directory
 write.csv(dfkeep, file = paste("../output/", Sys.Date(),"rawcombooutput.csv",sep=""), row.names = FALSE)
-write.csv(totalskeep, file = paste("..output/", Sys.Date(),".combooutput.csv", sep=""), row.names = FALSE)
+write.csv(totalskeep, file = paste("../output/", Sys.Date(),".combooutput.csv", sep=""), row.names = FALSE)
 ```
 
-###Is the proportion of correct and incorrect trials equal across all side and image combinations?
+###Is the proportion of correct and incorrect trials equal across all sample and correct grid combinations?
 
 Equality of performance across stimulus combinations will be checked via Pearson's chi-squared test. Subsequently, each stimulus configuration will be checked separately to determine if responding differs from chance performance, assumed to be 50%.
 
@@ -90,7 +90,7 @@ Equality of performance across stimulus combinations will be checked via Pearson
 ###Perform chi-squared tests for each image/side combo
 ###Note that initial chi-squared across groups compares independence of distributions, whereas
 ###chi-squared tests of individual rows compare correct vs. incorrect responding to a hypothetical 50% chance 
-combotabs <- ddply(totalskeep, .(grid, image), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
+combotabs <- ddply(totalskeep, .(correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
 print(combotabs)
 ###Across all possible configurations,
 print(chisq.test(combotabs[,4:5]))
@@ -100,14 +100,18 @@ print(chisq.test(combotabs[,4:5]))
 
 ```{r}
 ###Check individual pairings to determine if each combination is above or below chance
-###Side 1 Image 1:
+###Correct 1, Sample 2:
 print(chisq.test(combotabs[1,4:5]))
-###Side 1 Image 2:
+###Correct 1, Sample 3:
 print(chisq.test(combotabs[2,4:5]))
-###Side 3 Image 1:
+###Correct 2, Sample 1:
 print(chisq.test(combotabs[3,4:5]))
-###Side 3 Image 2:
+###Correct 2, Sample 3:
 print(chisq.test(combotabs[4,4:5]))
+###Correct 3, Sample 1:
+print(chisq.test(combotabs[5,4:5]))
+###Correct 3, Sample 2:
+print(chisq.test(combotabs[6,4:5]))
 ```
 
 **All configurations except Grid 3 Image 2 (Right, Sample image O) differ significantly from chance.**
