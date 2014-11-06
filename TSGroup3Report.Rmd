@@ -288,12 +288,12 @@ for (mouseid in 1:12){
 }
 ```
 
-###output number of incorrect responses to center square for each mouse, colored by schedule
+###output correct FIRST TIME RESPONSES for each mouse, colored by schedule
 ```{r}
 for (mouseid in 1:12){
     setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
-    gmouseid3 <- ggplot(setallmouseid, aes(x = Date, y = centerincorrect))
-    pmouseid3 <- gmouseid3 + geom_point(aes(color = Schedule), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle(paste("Mouse",mouseid, sep = " ")) + coord_cartesian(ylim = c(0,50))
+    gmouseid3 <- ggplot(setallmouseid, aes(x = Date, y = percentfirst))
+    pmouseid3 <- gmouseid3 + geom_point(aes(color = Schedule), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle(paste("Mouse",mouseid, sep = " ")) + coord_cartesian(ylim = c(0,100))
     print(pmouseid3)
 }
 ```
