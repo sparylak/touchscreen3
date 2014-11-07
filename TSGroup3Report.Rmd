@@ -213,6 +213,8 @@ print(tail(setalltrim,12))
 
 ### Calculate summary measures including percent correct for both correction and non-correction trials
 ```{r}
+###Warning: It is possible to initiate a correction trial but not finish it, leading the total number of correction vs. non-correction trials to be off by 1.  This is unlikely to present a problem over large numbers of trials, but may impact sessions where mice did very few trials.  Any session where total correct responses are <5 should be viewed with great suspicion.  
+
 ##Set NA values to zero before you calculate summary measures
 setalltrim[is.na(setalltrim)] <- 0
 ##totaltrials
