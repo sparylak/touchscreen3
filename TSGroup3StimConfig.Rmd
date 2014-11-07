@@ -186,5 +186,7 @@ print(g)
 ###Output histogram of incorrect responses per correct, excluding zero-incorrect sequences.
 dfincorrect <- dfkeep[dfkeep$incorrect != 0,]
 dfdoubleinc <- dfincorrect[grepl(pattern = "Double", dfincorrect$schedule),]
-hist(dfdoubleinc$incorrect, breaks = 20)
+inccount <- count(dfdoubleinc, vars = .(incorrect))
+g<- ggplot(inccount, aes(x = incorrect, y = freq)) + geom_point(size = 4)
+print(g)
 ```
