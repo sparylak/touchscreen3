@@ -300,6 +300,16 @@ for (mouseid in 1:12){
 }
 ```
 
+###Display mean performance across blocks of 5 days
+```{r}
+setalltrim$Block <- as.factor(cut(setalltrim$DaysOnSchedule, c(1,5,10,15,20,25,30), include.lowest = TRUE, labels = FALSE))
+library(plyr)
+blockedmeans<- ddply(setalltrim, .(Mouse, Schedule, Block), summarize, blockedmean = mean(percentall))
+blockedmeansshort <- blockedmeans[(blockedmeans$Schedule != "Initial Touch" & blockedmeans$Schedule != "Must Touch"),]
+g <- ggplot(blockedmeansshort, aes(x = Block, y = blockedmean, group = Mouse)) + geom_point(aes(color = Mouse), size = 4) +geom_line(aes(color = Mouse), size = 1.5) + geom_hline(aes(yintercept = 85)) + geom_hline(aes(yintercept = 50)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(Schedule ~.) + facet_wrap( ~ Schedule, ncol = 3)
+print(g)
+```
+
 ### Summarize number of days spent on each schedule
 ```{r}
 scheddf<- data.frame(Mouse = rep(1:12, 18), Schedule = rep(c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble", "NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"), each = 12), DaysNeeded = as.integer(NA))
