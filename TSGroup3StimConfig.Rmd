@@ -15,9 +15,13 @@ Files to use are pulled from a subfolder "raw" under the directory:
 and all schedule information (NonMatch vs. NonMatchEasy-Hard vs. Match) is currently ignored.  Complete sets of mice are not required, as each session is processed individually.
 
 ```{r}
-filestouse <- list.files(path = "../StimulusConfigData/", pattern = "raw.csv")
+filestouse <- {}
+for(mouse in 1:12){
+ filepattern <- paste("Mouse", mouse, "raw.csv", sep = "")
+filestouse <- append(filestouse, list.files(path = "../StimulusConfigData/", pattern = filepattern))
+}
 datestouse <- unique(as.Date(gsub("Mouse[1-12]raw.csv", "", filestouse), format = "%Y%m%d"))
-dfkeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correct = {}, incorrect = {})
+dfkeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correct = {}, incorrect = {}, totaltrials = {})
 totalskeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
 ```
 
@@ -48,20 +52,32 @@ pretrainingsched <- c("Must Touch", "PunishInc")
 ### Loop through individual files and extract mouse number, session date, and events from each file
 
 ```{r}
+###Keep track of whether current file marks a switch to new mouse or schedule
+currentmouse <- 0
+currentsched <- ""
+
 for(fil in filestouse){
         
     ms1 <- read.csv(file = paste("../StimulusConfigData/",fil,sep=""), header = TRUE, stringsAsFactors = FALSE)
     numrows <- length(ms1$Item_Name)
     mouseid <- as.integer(gsub("^[0-9]*(Mouse)|raw.csv","",fil))
+    if(mouseid != currentmouse) {
+        totaltrials <- 0
+        currentmouse <- mouseid
+    }
     sessiondate <- as.Date(gsub("Mouse[1-12]raw.csv","", fil), format="%Y%m%d")
     sessionsched <- schedtrim[(schedtrim$Date == sessiondate) & (schedtrim$Mouse == mouseid),4]    
-    
+    if(sessionsched != currentsched) {
+        totaltrials <- 0
+        currentsched <- sessionsched
+        }
     gridid <- 0
     imageid <- 0
+    print(paste(currentmouse, currentsched, sep = ","))
 
     ###generate empty data frame with number of rows based on number of correct grid positions set in file
     dfrows <- (sum(ms1$Item_Name == "Correct_Grid_Position") - 1)
-    trackerdf <- data.frame(date = rep(sessiondate,dfrows), mouse = rep(mouseid,dfrows), schedule = rep(sessionsched,dfrows), correctgrid = rep(0,dfrows), samplegrid = 0, correct = 0, incorrect = 0, row.names = (1:dfrows))
+    trackerdf <- data.frame(date = rep(sessiondate,dfrows), mouse = rep(mouseid,dfrows), schedule = rep(sessionsched,dfrows), correctgrid = rep(0,dfrows), samplegrid = 0, correct = 0, incorrect = 0, totaltrials = 0, row.names = (1:dfrows))
     ### Warning: grid positions will initially be set to zero
     rowindex <- 1
     ###loop through each row of csv file and fill values in empty data frame according to event type
@@ -82,8 +98,18 @@ for(fil in filestouse){
             trackerdf$incorrect[rowindex] <- trackerdf$incorrect[rowindex] + 1
         }
     }
+    ###Calculate running tally of trials for session, starting from point reached in last session for same mouse and schedule.
+    
+    for (row in 1:dfrows){
+        if(row == 1){
+            trackerdf$totaltrials[row] <- trackerdf$correct[row] + trackerdf$incorrect[row] + totaltrials
+        } else {
+            trackerdf$totaltrials[row] <- trackerdf$totaltrials[row - 1] + trackerdf$correct[row] + trackerdf$incorrect[row]
+        }
+    }
     ###bind data from individual file to all previous files
     dfkeep <- rbind(dfkeep, trackerdf)
+    totaltrials <- trackerdf$totaltrials[dfrows]
     library(plyr)
     ###summarize correct and incorrect responses session and bind to all previous sessions
     dftotals <- ddply(trackerdf, .(date, mouse, schedule, correctgrid, samplegrid), summarize, correcttotal = sum(correct), incorrecttotal = sum(incorrect))
