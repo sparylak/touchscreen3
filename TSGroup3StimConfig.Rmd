@@ -119,6 +119,18 @@ for(fil in filestouse){
 }
 ```
 
+###Cut dfkeep into blocks of 50 trials, and display performance for each schedule across trial blocks
+```{r}
+dfkeep$trialblock <- as.factor(cut(dfkeep$totaltrials, breaks = 50*(0:10), include.lowest = TRUE, labels = FALSE))
+blockeddf<- ddply(dfkeep, .(mouse, schedule, trialblock), summarize, totalcorrect = sum(correct), trials = (max(totaltrials)))
+blockeddf$trials <- blockeddf$trials - 50*(as.integer(blockeddf$trialblock)-1)
+blockeddf$percentall <- blockeddf$totalcorrect/blockeddf$trials
+blockeddf$mouse <- as.factor(blockeddf$mouse)
+library(ggplot2)
+g <- ggplot(blockeddf, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
+print(g)
+```
+
 ###Save output?
 
 ```{r}
