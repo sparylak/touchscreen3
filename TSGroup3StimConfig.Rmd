@@ -129,6 +129,30 @@ blockeddf$mouse <- as.factor(blockeddf$mouse)
 library(ggplot2)
 g <- ggplot(blockeddf, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
 print(g)
+###this is nice, but how do I get 1st 50 trials at sample 2, correct 3, etc?
+
+s3c1 <- dfkeep[(dfkeep$correctgrid == 1 & dfkeep$samplegrid == 3),]
+s3c1 <- s3c1[grepl(pattern = "Double", x = s3c1$schedule),]
+#currently this wipes out the original trial number and counts only trials of the same stimulus configuration type
+stimrows <- length(s3c1$mouse)
+for(row in 1:stimrows){
+    ###need to somehow mark transition points between mice, schedules without excessive forloops???
+    if(row == 1){
+            s3c1$totaltrials[row] <- s3c1$correct[row] + s3c1$incorrect[row] 
+        } else if ((s3c1$mouse[row] == s3c1$mouse[row - 1]) & (s3c1$schedule[row] == s3c1$schedule[row - 1])){
+            s3c1$totaltrials[row] <- s3c1$totaltrials[row - 1] + s3c1$correct[row] + s3c1$incorrect[row]
+        } else {s3c1$totaltrials[row] <- s3c1$correct[row] + s3c1$incorrect[row]}
+    }
+###with 6 differet stimulus configuations, number of trials at each is limited.  breaks are thus blocks of 15 trials here vs. 50 trials when all combos are lumped together
+s3c1$trialblock <- as.factor(cut(s3c1$totaltrials, breaks = 15*(0:10), include.lowest = TRUE, labels = FALSE))
+###graph it!
+stimblocked<- ddply(s3c1, .(mouse, schedule, trialblock), summarize, totalcorrect = sum(correct), trials = (max(totaltrials)))
+stimblocked$trials <- stimblocked$trials - 15*(as.integer(stimblocked$trialblock)-1)
+stimblocked$percentall <- stimblocked$totalcorrect/stimblocked$trials
+stimblocked$mouse <- as.factor(stimblocked$mouse)
+library(ggplot2)
+g <- ggplot(stimblocked, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
+print(g)
 ```
 
 ###Save output?
