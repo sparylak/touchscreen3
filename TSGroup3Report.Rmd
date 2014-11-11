@@ -70,7 +70,7 @@ print(tail(schedtrim,12))
 #Generate list of schedules contained in data range of files
 schedulestouse <- schedtrim[(schedtrim$Date %in%datestouse), 4]
 completesched <- c("NonMatchtoX", "NonMatchtoO", "NonMatchInitiateSingle", "NonMatchSingle2", "NonMatchCenter", "NonMatchTripleDisplay", "NonMatchInitiateCenter", "NonMatchInitiateTriple", "NonMatchInitiateFull", "MatchInitiateTriple", "MatchInitiateFull")
-locationsched <- c("MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble")
+locationsched <- c("MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy", "NonMatchLocationDouble", "NonMatchLocationDoubleEasy")
 easyhardsched <- c("NonMatchTripleEasyHard", "NonMatchFullEasyHard")
 pretrainingsched <- c("PunishIncorrect", "PunishInc")
 ```
@@ -271,7 +271,7 @@ print(p)
 
 ###output individual graphs of number of trials completed by mouse, colored by schedule
 ```{r}
-setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble", "NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"))
+setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy","NonMatchLocationDouble", "NonMatchLocationDoubleEasy"," NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"))
 for (mouseid in 1:12){
     setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
 gmouseid <- ggplot(setallmouseid, aes(x = Date, y = totaltrials))
@@ -312,7 +312,7 @@ print(g)
 
 ### Summarize number of days spent on each schedule
 ```{r}
-scheddf<- data.frame(Mouse = rep(1:12, 18), Schedule = rep(c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble", "NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"), each = 12), DaysNeeded = as.integer(NA))
+scheddf<- data.frame(Mouse = rep(1:12, 20), Schedule = rep(c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy", "NonMatchLocationDouble", "NonMatchLocationDoubleEasy", "NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"), each = 12), DaysNeeded = as.integer(NA))
 for (mouseid in 1:12){
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "Initial Touch", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "Initial Touch")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "Must Touch", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "Must Touch")
@@ -322,7 +322,9 @@ for (mouseid in 1:12){
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationSingle")    
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationSingle")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationDouble", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationDouble")
+        scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationDoubleEasy", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationDoubleEasy")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationDouble", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationDouble")
+        scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationDoubleEasy", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationDoubleEasy")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchCenter", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchCenter")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateCenter", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateCenter")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchTripleDisplay", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchTripleDisplay")
