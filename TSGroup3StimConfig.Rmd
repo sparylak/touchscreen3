@@ -12,7 +12,7 @@ Files to use are pulled from a subfolder "raw" under the directory:
 
 `r getwd() ` 
 
-and all schedule information (NonMatch vs. NonMatchEasy-Hard vs. Match) is currently ignored.  Complete sets of mice are not required, as each session is processed individually.
+Complete sets of mice are not required, as each session is processed individually.
 
 ```{r}
 filestouse <-{}
