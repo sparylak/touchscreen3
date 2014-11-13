@@ -178,9 +178,14 @@ combotabslong <- ddply(totalskeep, .(schedule, correctgrid, samplegrid), summari
 print(combotabslong)
 ###Across all possible configurations, collapsing across schedules
 ###WARNING:  In Match schedules up to but not including DoubleEasy, "Correct_Grid_Position" actually refers to location of the foil
-combotabs <- ddply(totalskeep, .(correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
-print(combotabs)
-print(chisq.test(combotabs[,4:5]))
+combotabsnonmatch <- ddply(totalskeep[grep("^NonMatchLocationDouble", totalskeep$schedule),], .(correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
+print(combotabsnonmatch)
+print(chisq.test(combotabsnonmatch[,4:5]))
+
+combotabsmatch <- ddply(totalskeep[grep("^MatchLocationDouble", totalskeep$schedule),], .(correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
+print(combotabsmatch)
+print(chisq.test(combotabsmatch[,4:5]))
+
 ```
 
 **A large disparity exists in responding to different configurations.**
