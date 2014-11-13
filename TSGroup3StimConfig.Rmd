@@ -15,7 +15,7 @@ Files to use are pulled from a subfolder "raw" under the directory:
 and all schedule information (NonMatch vs. NonMatchEasy-Hard vs. Match) is currently ignored.  Complete sets of mice are not required, as each session is processed individually.
 
 ```{r}
-filestouse <- {}
+filestouse <-{}
 for(mouse in 1:12){
  filepattern <- paste("Mouse", mouse, "raw.csv", sep = "")
 filestouse <- append(filestouse, list.files(path = "../StimulusConfigData/", pattern = filepattern))
@@ -97,6 +97,9 @@ for(fil in filestouse){
         else if(ms1[row, 4] == "Incorrect") {
             trackerdf$incorrect[rowindex] <- trackerdf$incorrect[rowindex] + 1
         }
+        else if(ms1[row, 4] == "No correction") {
+            rowindex <- rowindex + 1
+        }
     }
     ###Calculate running tally of trials for session, starting from point reached in last session for same mouse and schedule.
     
@@ -121,7 +124,7 @@ for(fil in filestouse){
 
 ###Cut dfkeep into blocks of 50 trials, and display performance for each schedule across trial blocks
 ```{r}
-dfkeep$trialblock <- as.factor(cut(dfkeep$totaltrials, breaks = 50*(0:10), include.lowest = TRUE, labels = FALSE))
+dfkeep$trialblock <- as.factor(cut(dfkeep$totaltrials, breaks = 50*(0:12), include.lowest = TRUE, labels = FALSE))
 blockeddf<- ddply(dfkeep, .(mouse, schedule, trialblock), summarize, totalcorrect = sum(correct), trials = (max(totaltrials)))
 blockeddf$trials <- blockeddf$trials - 50*(as.integer(blockeddf$trialblock)-1)
 blockeddf$percentall <- blockeddf$totalcorrect/blockeddf$trials
@@ -129,7 +132,7 @@ blockeddf$mouse <- as.factor(blockeddf$mouse)
 library(ggplot2)
 g <- ggplot(blockeddf, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
 print(g)
-###this is nice, but how do I get 1st 50 trials at sample 2, correct 3, etc?
+###this is nice, but what about individual stimulus combos?
 
 s3c1 <- dfkeep[(dfkeep$correctgrid == 1 & dfkeep$samplegrid == 3),]
 s3c1 <- s3c1[grepl(pattern = "Double", x = s3c1$schedule),]
