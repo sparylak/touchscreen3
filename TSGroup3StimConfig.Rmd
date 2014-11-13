@@ -73,8 +73,7 @@ for(fil in filestouse){
         }
     gridid <- 0
     imageid <- 0
-    print(paste(currentmouse, currentsched, sep = ","))
-
+    
     ###generate empty data frame with number of rows based on number of correct grid positions set in file
     dfrows <- (sum(ms1$Item_Name == "Correct_Grid_Position") - 1)
     trackerdf <- data.frame(date = rep(sessiondate,dfrows), mouse = rep(mouseid,dfrows), schedule = rep(sessionsched,dfrows), correctgrid = rep(0,dfrows), samplegrid = 0, correct = 0, incorrect = 0, totaltrials = 0, row.names = (1:dfrows))
@@ -178,6 +177,7 @@ Equality of performance across stimulus combinations will be checked via Pearson
 combotabslong <- ddply(totalskeep, .(schedule, correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
 print(combotabslong)
 ###Across all possible configurations, collapsing across schedules
+###WARNING:  In Match schedules up to but not including DoubleEasy, "Correct_Grid_Position" actually refers to location of the foil
 combotabs <- ddply(totalskeep, .(correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
 print(combotabs)
 print(chisq.test(combotabs[,4:5]))
@@ -233,15 +233,25 @@ print(chisq.test(combotabs[2,3:4]))
 print(chisq.test(combotabs[3,3:4]))
 ```
 
-**Note that for Match mice, the Correct_Grid_Position actually indicates, the foil, and the Incorrect_Grid_Position is the blank.  So the comma notation refers to the following: (ImageAppearingInChoiceOnly,ImageAppearingInSample)**
+**Note that for Match mice, the Correct_Grid_Position actually indicates, the foil, and the Incorrect_Grid_Position is the blank.  So the comma notation refers to the following: (ImageAppearingInSample,ImageAppearingInChoiceOnly)**
 
-```{r fig.height = 8}
+```{r fig.height = 8, fig.width = 10}
+
 ###Output graph of percent correct across days for all stimulus combinations split by mouse
-bymouse <- ddply(totalskeep, .(mouse, schedule, correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
-bymouse$trialcode <- paste(bymouse$correctgrid,bymouse$samplegrid, sep = ",")
+easy <- totalskeep[grep("Easy", totalskeep$schedule),]
+bymouseeasy <- ddply(easy, .(mouse, schedule, correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
+bymouseeasy$trialcode <- paste(bymouseeasy$samplegrid,bymouseeasy$correctgrid, sep = ",")
+bymouseeasy$trialcode <- factor(bymouseeasy$trialcode, levels = c("1,1","3,1","1,3","3,3"))
+library(ggplot2)
+g <- ggplot(bymouseeasy, aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.1)) + facet_wrap(~ mouse, ncol = 2)
+print(g)
+
+noteasy <- totalskeep[grep("Easy|Single", totalskeep$schedule, invert = TRUE),]
+bymouse <- ddply(noteasy, .(mouse, schedule, correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
+bymouse$trialcode <- paste(bymouse$samplegrid,bymouse$correctgrid, sep = ",")
 bymouse$trialcode <- factor(bymouse$trialcode, levels = c("1,2","1,3","2,1","2,3","3,1","3,2"))
 library(ggplot2)
-g <- ggplot(bymouse, aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + coord_cartesian(ylim = c(0,1)) + facet_wrap(~ mouse, ncol = 3)
+g <- ggplot(bymouse, aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.10)) + facet_wrap(~ mouse, ncol = 3)
 print(g)
 ```
 
