@@ -13,6 +13,10 @@ Files to use are pulled from a subfolder "raw" under the directory:
 
 Complete sets of mice are not required, as each session is processed individually.
 
+Known issues:
+-Plot of binned performance across 15-trial blocks includes only Sample 3 Correct 1 combo and does not separate match from NonMatch
+
+
 ```{r}
 filestouse <-{}
 for(mouse in 1:12){
@@ -166,7 +170,7 @@ write.csv(totalskeep, file = paste("../output/", Sys.Date(),".combooutput.csv", 
 
 ###Is the proportion of correct and incorrect trials equal across all sample and correct grid combinations?
 
-Equality of performance across stimulus combinations will be checked via Pearson's chi-squared test. Subsequently, each stimulus configuration will be checked separately to determine if responding differs from chance performance, assumed to be 50%.
+Equality of performance across stimulus combinations will be checked via Pearson's chi-squared test. Subsequently, each stimulus configuration can be checked separately to determine if responding differs from chance performance, assumed to be 50%.
 
 
 ```{r}
