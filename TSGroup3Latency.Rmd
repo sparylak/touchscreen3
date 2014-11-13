@@ -1,0 +1,56 @@
+---
+title: "TSGroup3Latency"
+author: "SLP"
+date: "Thursday, November 13, 2014"
+output: html_document
+---
+
+This script takes as its input reduced OR raw data from ABETII, exported as csv files, with one file corresponding to the performance of a single mouse during a single session.  Reduced data must contain [?].  Presence of additional events in raw files is not problematic and will be skipped over if not matching any needed events.  However, if any information is present in the csv file prior to the header, this must be removed manually prior to analysis.
+
+Files to use are pulled from a subfolder "raw" under the directory: 
+
+`r getwd() ` 
+
+Complete sets of mice are not required, as each session is processed individually.
+
+
+```{r}
+filestouse <-{}
+for(mouse in 1:12){
+ filepattern <- paste("Mouse", mouse, "raw.csv", sep = "")
+filestouse <- append(filestouse, list.files(path = "../StimulusConfigData/", pattern = filepattern))
+}
+```
+
+Data from the following dates will be analyzed:
+```{r}
+datestouse <- unique(as.Date(gsub("Mouse[1-12]raw.csv", "", filestouse), format = "%Y%m%d"))
+print(datestouse)
+```
+
+Read in schedule info from data summary sheet, same as used in daily reporting script.
+```{r}
+# Read in manually entered data for date, mouseid, and schedule
+schedinfo <- read.csv(file = "../Data Summary.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+#Reformat scheduleinfo dates
+schedinfo$Date <- as.Date(schedinfo$Date, format = "%m/%d/%Y")
+schedtrim <- schedinfo[schedinfo$Date %in% datestouse ,1:4]
+#Mice are not integers
+schedtrim$Mouse <- as.character(schedtrim$Mouse)
+#Print extracted info for first day
+print(head(schedtrim,12))
+#Print extracted info for last day
+print(tail(schedtrim,12))
+
+#Generate list of schedules contained in data range of files
+locationsched <- c("MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble")
+pretrainingsched <- c("Must Touch", "PunishInc")
+```
+
+Generate empty data frame for storing reduced data
+```{r}
+dfkeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correct = {}, incorrect = {}, totaltrials = {})
+totalskeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
+
+```
+
