@@ -5,14 +5,13 @@ date: "Tuesday, November 04, 2014"
 output: html_document
 ---
 
-This script takes as its input reduced data from ABETII, exported as csv files, with one file corresponding to 
-the performance of a single mouse during a single session.  Reduced data must be queried for "Correct_Grid_Position", "SampleImage", "Correct", and "Incorrect".  If any information is present in the csv file prior to the header, this must be removed manually prior to analysis.
+This script takes as its input reduced OR raw data from ABETII, exported as csv files, with one file corresponding to the performance of a single mouse during a single session.  Reduced data must contain AT LEAST "Correct_Grid_Position", "SampleImage", "Correct", and "Incorrect".  Presence of additional events in raw files is not problematic and will be skipped over if not matching any needed events.  However, if any information is present in the csv file prior to the header, this must be removed manually prior to analysis.
 
 Files to use are pulled from a subfolder "raw" under the directory: 
 
 `r getwd() ` 
 
-and all schedule information (NonMatch vs. NonMatchEasy-Hard vs. Match) is currently ignored.  Complete sets of mice are not required, as each session is processed individually.
+Complete sets of mice are not required, as each session is processed individually.
 
 ```{r}
 filestouse <-{}
