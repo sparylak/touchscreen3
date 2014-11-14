@@ -158,6 +158,8 @@ stimblocked$mouse <- as.factor(stimblocked$mouse)
 library(ggplot2)
 g <- ggplot(stimblocked, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
 print(g)
+
+
 ```
 
 ###Save output?

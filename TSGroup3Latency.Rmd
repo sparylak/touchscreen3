@@ -4,7 +4,9 @@ author: "SLP"
 date: "Thursday, November 13, 2014"
 output: html_document
 ---
-
+```{r set-options, echo = FALSE, cache = FALSE}
+options(width = 100)
+```
 This script takes as its input reduced OR raw data from ABETII, exported as csv files, with one file corresponding to the performance of a single mouse during a single session.  Reduced data must contain at least the events "Display Image", "Initiate ChoicePhase", "Display Choice Images", "Correct", and "Incorrect".  Presence of additional events in raw files is not problematic and will be skipped over if not matching any needed events.  However, if any information is present in the csv file prior to the header, this must be removed manually prior to analysis.
 
 Files to use are pulled from a subfolder "StimulusConfigData" under the directory: 
@@ -64,7 +66,7 @@ for(fil in filestouse){
     
     ###generate empty data frame with number of rows based on number of trials initiated
     dfrows <- sum(tempfile$Item_Name == "Display Image")
-    latdf <- data.frame(date = rep(sessiondate, dfrows), mouse = mouseid, schedule = sessionsched, sampleinit = "", sampleresponse = "", choiceinit = "", choiceresponse = "", correct = "")
+    latdf <- data.frame(date = rep(sessiondate, dfrows), mouse = as.factor(mouseid), schedule = sessionsched, sampleinit = "", sampleresponse = "", choiceinit = "", choiceresponse = "", correct = "")
     
     ###compare number of initiated to completed trials. if trial incomplete then set all remaining timestamps for final trial to 3600
     initiated1 <- sum(tempfile$Item_Name == "Display Image")
@@ -102,9 +104,16 @@ for(fil in filestouse){
     dfkeep$sampleresponselat <- dfkeep$sampleresponse - dfkeep$sampleinit
     dfkeep$choiceinitlat <- dfkeep$choiceinit - dfkeep$sampleresponse
     dfkeep$choiceresponselat <- dfkeep$choiceresponse - dfkeep$choiceinit
+###keep separate data frame for most recent 7 calendar days
+    dfkeep7 <- dfkeep[dfkeep$date > (Sys.Date() - 8),]
+
 library(plyr)
-###summarize response latencies, split by mouse and schedule
+###summarize response latencies, split by mouse and schedule, over all time
     lattest<- ddply(dfkeep, .(mouse, schedule), summarize, sampleresponsemean = mean(sampleresponselat), sampleresponsemedian = median(sampleresponselat), choiceinitmean = mean(choiceinitlat), choiceinitmedian = median(choiceinitlat), choiceresponsemean = mean(choiceresponselat), choiceresponsemedian = median(choiceresponselat), totaltrials = length(sampleinit))
+###keep separate summary of response latencies, split by mouse and schedule, for last 7 calendar days
+
+    lattest7 <- ddply(dfkeep7, .(mouse, date, schedule), summarize, sampleresponsemean = mean(sampleresponselat), sampleresponsemedian = median(sampleresponselat), choiceinitmean = mean(choiceinitlat), choiceinitmedian = median(choiceinitlat), choiceresponsemean = mean(choiceresponselat), choiceresponsemedian = median(choiceresponselat), totaltrials = length(sampleinit))
+
 ```
 
 ###Single schedules
@@ -118,4 +127,11 @@ latdouble <- lattest[grep("Double", lattest$schedule),]
 ###graph 3 main response latency measures over double schedules
 g <- ggplot(latdouble) + geom_point(aes(x = "1:SampleResponse", y = sampleresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "2:ChoiceInit", y = choiceinitmedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "3:Choice Response", y = choiceresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + xlab(label = "") + ylab("Median Latency (s)")
 print(g)
+```
+
+###More detailed breakdown of latency to initiate choice over last 7 calendar days
+```{r fig.height = 8, fig.width = 8}
+g<- ggplot(lattest7, aes(x = date, y = choiceinitmedian, color = mouse)) + geom_point(position = position_jitter(w=0.1), size = 4) + scale_color_brewer(type = "qual", palette = "Paired") + ylab("Median latency to initiate choice (s)")
+print(g)
+print(lattest7[,c(1:3,6:7,10)])
 ```
