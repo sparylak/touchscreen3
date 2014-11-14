@@ -15,11 +15,11 @@ Complete sets of mice are not required, as each session is processed individuall
 
 
 ```{r}
-filestouse <-"20141112Mouse3raw.csv"
-#for(mouse in 1:12){
-#    filepattern <- paste("Mouse", mouse, "raw.csv", sep = "")
-#    filestouse <- append(filestouse, list.files(path = "../StimulusConfigData/", pattern = filepattern))
-#}
+filestouse <- {}
+for(mouse in 1:12){
+    filepattern <- paste("Mouse", mouse, "raw.csv", sep = "")
+    filestouse <- append(filestouse, list.files(path = "../StimulusConfigData/", pattern = filepattern))
+}
 ```
 
 Data from the following dates will be analyzed:
@@ -48,9 +48,9 @@ pretrainingsched <- c("Must Touch", "PunishInc")
 ```
 
 Generate empty data frame for storing reduced data
-{r}
-dfkeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correct = {}, incorrect = {}, totaltrials = {})
-totalskeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
+```{r}
+dfkeep <- data.frame(date = {}, mouse = {}, schedule = {}, sampleinit = {}, sampleresponse = {}, choiceinit = {}, choiceresponse = {}, correct = {})
+##totalskeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
 
 ```
 
@@ -77,23 +77,40 @@ for(fil in filestouse){
         currentsched <- sessionsched
         }
     
-    ###generate empty data frame with number of rows based on number of correct grid positions set in file
+    ###generate empty data frame with number of rows based on number of trials initiated
     dfrows <- sum(tempfile$Item_Name == "Display Image")
-    latdf <- data.frame(date = rep(sessiondate, dfrows), mouse = mouseid, schedule = sessionsched, sampleinit = "", sampleresponse = "", choiceinit = "", choiceresponse = "")
+    latdf <- data.frame(date = rep(sessiondate, dfrows), mouse = mouseid, schedule = sessionsched, sampleinit = "", sampleresponse = "", choiceinit = "", choiceresponse = "", correct = "")
+    
+    ###compare number of initiated to completed trials. if trial incomplete then set all remaining timestamps for final trial to 3600
+    initiated1 <- sum(tempfile$Item_Name == "Display Image")
+    responded1 <- sum(tempfile$Item_Name == "Initiate ChoicePhase")
+    initiated2 <- sum(tempfile$Item_Name == "Display Choice Images")
+    if(initiated1 != responded1){padresponse1<- TRUE} else {padresponse1<-FALSE}
+     if(initiated1 != initiated2){padinitiated2 <- TRUE} else {padinitiated2<-FALSE}
+    
     ###populate data frame with data from current file
     latdf$sampleinit <- tempfile[tempfile$Item_Name == "Display Image",1]
-    latdf$sampleresponse <- tempfile[tempfile$Item_Name == "Initiate ChoicePhase",1]
-    latdf$choiceinit <- tempfile[tempfile$Item_Name == "Display Choice Images",1]
+    if(padresponse1 == TRUE){
+        latdf$sampleresponse <- append(tempfile[tempfile$Item_Name == "Initiate ChoicePhase",1],3600)
+    } else {
+        latdf$sampleresponse <- tempfile[tempfile$Item_Name == "Initiate ChoicePhase",1]
+    }
+    if(padinitiated2 == TRUE){
+        latdf$choiceinit <- append(tempfile[tempfile$Item_Name == "Display Choice Images",1], 3600)
+    } else {
+        latdf$choiceinit <- tempfile[tempfile$Item_Name == "Display Choice Images",1]
+    }
     corlat <- tempfile[tempfile$Item_Name == "Correct",1]
     incorlat <- tempfile[tempfile$Item_Name == "Incorrect",1]
-    latdf$choiceresponse <- sort(append(corlat, incorlat))
-    latdf$correct <- ""
+    choicelat <- sort(append(corlat, incorlat))
+    if(length(choicelat) != initiated1) {choicelat <- append(choicelat, 3600)}
+    latdf$choiceresponse <- choicelat
     latdf$correct <- (latdf$choiceresponse %in% corlat)
-}
 
-###START HERE 11/14
     ###bind data from individual file to all previous files
-    dfkeep <- rbind(dfkeep, trackerdf)
+    dfkeep <- rbind(dfkeep, latdf)
+}
+```
     totaltrials <- trackerdf$totaltrials[dfrows]
     library(plyr)
     ###summarize correct and incorrect responses session and bind to all previous sessions
