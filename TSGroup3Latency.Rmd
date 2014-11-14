@@ -5,13 +5,15 @@ date: "Thursday, November 13, 2014"
 output: html_document
 ---
 
-This script takes as its input reduced OR raw data from ABETII, exported as csv files, with one file corresponding to the performance of a single mouse during a single session.  Reduced data must contain [?].  Presence of additional events in raw files is not problematic and will be skipped over if not matching any needed events.  However, if any information is present in the csv file prior to the header, this must be removed manually prior to analysis.
+This script takes as its input reduced OR raw data from ABETII, exported as csv files, with one file corresponding to the performance of a single mouse during a single session.  Reduced data must contain at least the events "Display Image", "Initiate ChoicePhase", "Display Choice Images", "Correct", and "Incorrect".  Presence of additional events in raw files is not problematic and will be skipped over if not matching any needed events.  However, if any information is present in the csv file prior to the header, this must be removed manually prior to analysis.
 
-Files to use are pulled from a subfolder "raw" under the directory: 
+Files to use are pulled from a subfolder "StimulusConfigData" under the directory: 
 
 `r getwd() ` 
 
 Complete sets of mice are not required, as each session is processed individually.
+
+Warning: Only raw files from MatchLocation and NonMatchLocation schedules can be processed.  Pretraining (Must Touch, PunishIncorrect) or object-based schedules will crash.
 
 
 ```{r}
