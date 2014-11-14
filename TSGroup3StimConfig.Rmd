@@ -13,6 +13,7 @@ Files to use are pulled from a subfolder "raw" under the directory:
 
 Complete sets of mice are not required, as each session is processed individually.
 
+
 Known issues:
 -Plot of binned performance across 15-trial blocks includes only Sample 3 Correct 1 combo and does not separate match from NonMatch
 
