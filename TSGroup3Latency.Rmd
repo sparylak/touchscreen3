@@ -15,11 +15,11 @@ Complete sets of mice are not required, as each session is processed individuall
 
 
 ```{r}
-filestouse <-{}
-for(mouse in 1:12){
- filepattern <- paste("Mouse", mouse, "raw.csv", sep = "")
-filestouse <- append(filestouse, list.files(path = "../StimulusConfigData/", pattern = filepattern))
-}
+filestouse <-"20141112Mouse3raw.csv"
+#for(mouse in 1:12){
+#    filepattern <- paste("Mouse", mouse, "raw.csv", sep = "")
+#    filestouse <- append(filestouse, list.files(path = "../StimulusConfigData/", pattern = filepattern))
+#}
 ```
 
 Data from the following dates will be analyzed:
@@ -48,9 +48,58 @@ pretrainingsched <- c("Must Touch", "PunishInc")
 ```
 
 Generate empty data frame for storing reduced data
-```{r}
+{r}
 dfkeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correct = {}, incorrect = {}, totaltrials = {})
 totalskeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
 
 ```
 
+### Loop through individual files and extract mouse number, session date, and events from each file
+
+```{r}
+###Keep track of whether current file marks a switch to new mouse or schedule
+currentmouse <- 0
+currentsched <- ""
+
+for(fil in filestouse){
+        
+    tempfile <- read.csv(file = paste("../StimulusConfigData/",fil,sep=""), header = TRUE, stringsAsFactors = FALSE)
+    numrows <- length(tempfile$Item_Name)
+    mouseid <- as.integer(gsub("^[0-9]*(Mouse)|raw.csv","",fil))
+    if(mouseid != currentmouse) {
+        totaltrials <- 0
+        currentmouse <- mouseid
+    }
+    sessiondate <- as.Date(gsub("Mouse[1-12]raw.csv","", fil), format="%Y%m%d")
+    sessionsched <- schedtrim[(schedtrim$Date == sessiondate) & (schedtrim$Mouse == mouseid),4]    
+    if(sessionsched != currentsched) {
+        totaltrials <- 0
+        currentsched <- sessionsched
+        }
+    
+    ###generate empty data frame with number of rows based on number of correct grid positions set in file
+    dfrows <- sum(tempfile$Item_Name == "Display Image")
+    latdf <- data.frame(date = rep(sessiondate, dfrows), mouse = mouseid, schedule = sessionsched, sampleinit = "", sampleresponse = "", choiceinit = "", choiceresponse = "")
+    ###populate data frame with data from current file
+    latdf$sampleinit <- tempfile[tempfile$Item_Name == "Display Image",1]
+    latdf$sampleresponse <- tempfile[tempfile$Item_Name == "Initiate ChoicePhase",1]
+    latdf$choiceinit <- tempfile[tempfile$Item_Name == "Display Choice Images",1]
+    corlat <- tempfile[tempfile$Item_Name == "Correct",1]
+    incorlat <- tempfile[tempfile$Item_Name == "Incorrect",1]
+    latdf$choiceresponse <- sort(append(corlat, incorlat))
+    latdf$correct <- ""
+    latdf$correct <- (latdf$choiceresponse %in% corlat)
+}
+
+###START HERE 11/14
+    ###bind data from individual file to all previous files
+    dfkeep <- rbind(dfkeep, trackerdf)
+    totaltrials <- trackerdf$totaltrials[dfrows]
+    library(plyr)
+    ###summarize correct and incorrect responses session and bind to all previous sessions
+    dftotals <- ddply(trackerdf, .(date, mouse, schedule, correctgrid, samplegrid), summarize, correcttotal = sum(correct), incorrecttotal = sum(incorrect))
+    dftotals$trialcount <- (dftotals$correcttotal + dftotals$incorrecttotal)
+    dftotals$percent <- (dftotals$correcttotal/(dftotals$correcttotal + dftotals$incorrecttotal))
+    totalskeep <- rbind(totalskeep, dftotals)
+}
+```
