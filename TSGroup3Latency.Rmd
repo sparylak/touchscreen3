@@ -30,7 +30,7 @@ datestouse <- unique(as.Date(gsub("Mouse[1-12]raw.csv", "", filestouse), format 
 print(datestouse)
 ```
 
-Read in schedule info from data summary sheet, same as used in daily reporting script.
+Read in schedule info from data summary sheet, same as used in daily reporting script.  This sheet MUST be current up to the last date present in the raw csv files.  
 ```{r}
 # Read in manually entered data for date, mouseid, and schedule
 schedinfo <- read.csv(file = "../Data Summary.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
@@ -43,41 +43,24 @@ schedtrim$Mouse <- as.character(schedtrim$Mouse)
 print(head(schedtrim,12))
 #Print extracted info for last day
 print(tail(schedtrim,12))
-
-#Generate list of schedules contained in data range of files
-locationsched <- c("MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "NonMatchLocationDouble")
-pretrainingsched <- c("Must Touch", "PunishInc")
 ```
 
 Generate empty data frame for storing reduced data
 ```{r}
 dfkeep <- data.frame(date = {}, mouse = {}, schedule = {}, sampleinit = {}, sampleresponse = {}, choiceinit = {}, choiceresponse = {}, correct = {})
-##totalskeep <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correcttotal = {}, incorrecttotal = {}, trialcount = {}, percent = {})
-
 ```
 
-### Loop through individual files and extract mouse number, session date, and events from each file
+### Loop through individual files and bind data across mice and days.
 
 ```{r}
-###Keep track of whether current file marks a switch to new mouse or schedule
-currentmouse <- 0
-currentsched <- ""
-
 for(fil in filestouse){
-        
+    ###Read in raw data for a single session, extract mouse number, session date, and schedule
     tempfile <- read.csv(file = paste("../StimulusConfigData/",fil,sep=""), header = TRUE, stringsAsFactors = FALSE)
     numrows <- length(tempfile$Item_Name)
     mouseid <- as.integer(gsub("^[0-9]*(Mouse)|raw.csv","",fil))
-    if(mouseid != currentmouse) {
-        totaltrials <- 0
-        currentmouse <- mouseid
-    }
     sessiondate <- as.Date(gsub("Mouse[1-12]raw.csv","", fil), format="%Y%m%d")
     sessionsched <- schedtrim[(schedtrim$Date == sessiondate) & (schedtrim$Mouse == mouseid),4]    
-    if(sessionsched != currentsched) {
-        totaltrials <- 0
-        currentsched <- sessionsched
-        }
+
     
     ###generate empty data frame with number of rows based on number of trials initiated
     dfrows <- sum(tempfile$Item_Name == "Display Image")
@@ -88,7 +71,7 @@ for(fil in filestouse){
     responded1 <- sum(tempfile$Item_Name == "Initiate ChoicePhase")
     initiated2 <- sum(tempfile$Item_Name == "Display Choice Images")
     if(initiated1 != responded1){padresponse1<- TRUE} else {padresponse1<-FALSE}
-     if(initiated1 != initiated2){padinitiated2 <- TRUE} else {padinitiated2<-FALSE}
+    if(initiated1 != initiated2){padinitiated2 <- TRUE} else {padinitiated2<-FALSE}
     
     ###populate data frame with data from current file
     latdf$sampleinit <- tempfile[tempfile$Item_Name == "Display Image",1]
