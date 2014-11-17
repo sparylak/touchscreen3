@@ -29,10 +29,10 @@ Any changes to these identities (e.g. due to box failures that require running e
 Prior to Punish Incorrect, performance will appear as 100% because there's no real way to get these trials wrong.  For all later schedules, percentall indicates the total percentage of correct trials, including correction trials.
 
 The following R packages are required:
--base
--plyr
--ggplot2
--RColorBrewer
+- base
+- plyr
+- ggplot2
+- RColorBrewer
 
 ### Take inventory of files in raw directory and extract dates to report on.
 
@@ -62,9 +62,7 @@ print(tail(schedtrim,12))
 
 #Generate list of schedules contained in data range of files
 schedulestouse <- schedtrim[(schedtrim$Date %in%datestouse), 4]
-completesched <- c("NonMatchtoX", "NonMatchtoO", "NonMatchInitiateSingle", "NonMatchSingle2", "NonMatchCenter", "NonMatchTripleDisplay", "NonMatchInitiateCenter", "NonMatchInitiateTriple", "NonMatchInitiateFull", "MatchInitiateTriple", "MatchInitiateFull")
 locationsched <- c("MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy", "NonMatchLocationDouble", "NonMatchLocationDoubleEasy")
-easyhardsched <- c("NonMatchTripleEasyHard", "NonMatchFullEasyHard")
 pretrainingsched <- c("PunishIncorrect", "PunishInc")
 ```
 
@@ -88,30 +86,7 @@ schedindex <- 1
         ##Pull different variables depending on schedule
         colindex <- 6
         for (rowindex in 1:4) {
-            if (schedulestouse[schedindex] %in% completesched) {
-            ##correct
-            abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == 
-                    "Reward Collected Start ITI",colindex], mode = "numeric")
-            ##incorrect
-            abet1trim$incorrect[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
-                   "Incorrect",colindex], mode = "numeric")
-            ##corrtrials
-            abet1trim$corrtrials[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
-                "Total_No_Correction_Trials",colindex], mode = "numeric")
-            ##correctcorr
-            abet1trim$correctcorr[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
-                 "Correction_Trial_Correct_Counter",colindex], mode = "numeric")
-            ##centerincorrect - if variable exists then pull data from sheet, else set to 0
-            if (sum(abetdata1$Item_Name == "CenterTouch") > 0) {
-                abet1trim$centerincorrect[rowindex] <-as.vector(abetdata1[abetdata1$Item_Name == "CenterTouch",colindex], mode = "numeric")
-            } else {
-                abet1trim$centerincorrect[rowindex] <-as.vector(0, mode = "numeric")
-            }
-            ##Increment counters to move to next session
-            colindex <- colindex + 1
-            schedindex <- schedindex + 1
-                
-            } else if (schedulestouse[schedindex] %in% pretrainingsched) {
+            if (schedulestouse[schedindex] %in% pretrainingsched) {
             ##correct
             abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == 
                     "Reward Collected Start ITI",colindex], mode = "numeric")
@@ -126,31 +101,6 @@ schedindex <- 1
             colindex <- colindex + 1
             schedindex <- schedindex + 1
             
-            } else if (schedulestouse[schedindex] %in% easyhardsched) {
-            ##correct
-            abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == 
-                    "CorrectHardTrials",colindex], mode = "numeric")
-            ##incorrect
-            abet1trim$incorrect[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
-                   "TotalHardTrials",colindex] - abetdata1[abetdata1$Item_Name == 
-                   "CorrectHardTrials",colindex], mode = "numeric")
-            ##corrtrials - assumption is made that all incorrect trials lead to a correction trial.
-            ##May be off by one from the Total_No_Correction_Trials counter
-            abet1trim$corrtrials[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
-                   "TotalHardTrials",colindex] - abetdata1[abetdata1$Item_Name == 
-                   "CorrectHardTrials",colindex], mode = "numeric")
-            ##correctcorr
-            abet1trim$correctcorr[rowindex]  <-as.vector(abetdata1[abetdata1$Item_Name == 
-                 "CorrectCorrectionsHard",colindex], mode = "numeric")
-            ##centerincorrect - if variable exists then pull data from sheet, else set to 0
-            if (sum(abetdata1$Item_Name == "CenterTouch") > 0) {
-                abet1trim$centerincorrect[rowindex] <-as.vector(abetdata1[abetdata1$Item_Name == "CenterTouch",colindex], mode = "numeric")
-            } else {
-                abet1trim$centerincorrect[rowindex] <-as.vector(0, mode = "numeric")
-            }            
-            ##Increment counters to move to next session
-            colindex <- colindex + 1
-            schedindex <- schedindex + 1            
             } else if (schedulestouse[schedindex] %in% locationsched) {
             ##correct
             abet1trim$totalcorrect[rowindex]  <- as.vector(abetdata1[abetdata1$Item_Name == 
@@ -264,7 +214,7 @@ print(p)
 
 ###output individual graphs of number of trials completed by mouse, colored by schedule
 ```{r}
-setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy","NonMatchLocationDouble", "NonMatchLocationDoubleEasy"," NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"))
+setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc",  "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy","NonMatchLocationDouble", "NonMatchLocationDoubleEasy",))
 for (mouseid in 1:12){
     setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
 gmouseid <- ggplot(setallmouseid, aes(x = Date, y = totaltrials))
@@ -305,29 +255,19 @@ print(g)
 
 ### Summarize number of days spent on each schedule
 ```{r}
-scheddf<- data.frame(Mouse = rep(1:12, 20), Schedule = rep(c("Initial Touch", "Must Touch", "PunishInc", "NonMatchSingle2", "NonMatchInitiateSingle", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy", "NonMatchLocationDouble", "NonMatchLocationDoubleEasy", "NonMatchCenter", "NonMatchInitiateCenter", "NonMatchTripleDisplay", "NonMatchInitiateTriple", "NonMatchTripleEasyHard", "NonMatchInitiateFull", "NonMatchFullEasyHard", "MatchInitiateTriple", "MatchInitiateFull"), each = 12), DaysNeeded = as.integer(NA))
+scheddf<- data.frame(Mouse = rep(1:12, 9), Schedule = rep(c("Initial Touch", "Must Touch", "PunishInc", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy", "NonMatchLocationDouble", "NonMatchLocationDoubleEasy"), each = 12), DaysNeeded = as.integer(NA))
 for (mouseid in 1:12){
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "Initial Touch", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "Initial Touch")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "Must Touch", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "Must Touch")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "PunishInc", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "PunishInc")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchSingle2", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchSingle2")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateSingle")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationSingle")    
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationSingle")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationDouble", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationDouble")
         scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationDoubleEasy", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationDoubleEasy")
     scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationDouble", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationDouble")
         scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationDoubleEasy", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationDoubleEasy")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchCenter", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchCenter")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateCenter", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateCenter")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchTripleDisplay", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchTripleDisplay")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateTriple", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateTriple")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchTripleEasyHard", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchTripleEasyHard")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchInitiateFull", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchInitiateFull")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchFullEasyHard", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchFullEasyHard")
-scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchInitiateTriple", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchInitiateTriple")
-scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchInitiateFull", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchInitiateFull")
     }     
+
 scheddf[scheddf$DaysNeeded == 0,3] <- NA
 print(scheddf)
 #Note can use summary(scheddf[scheddf$Schedule == "PunishInc",]) to get mean and mediam number of days spent on #PunishInc or any other schedule of interest
