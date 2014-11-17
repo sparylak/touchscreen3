@@ -214,7 +214,7 @@ print(p)
 
 ###output individual graphs of number of trials completed by mouse, colored by schedule
 ```{r}
-setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc",  "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy","NonMatchLocationDouble", "NonMatchLocationDoubleEasy",))
+setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc",  "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy","NonMatchLocationDouble", "NonMatchLocationDoubleEasy"))
 for (mouseid in 1:12){
     setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
 gmouseid <- ggplot(setallmouseid, aes(x = Date, y = totaltrials))
@@ -253,22 +253,3 @@ g <- ggplot(blockedmeansshort, aes(x = Block, y = blockedmean, group = Mouse)) +
 print(g)
 ```
 
-### Summarize number of days spent on each schedule
-```{r}
-scheddf<- data.frame(Mouse = rep(1:12, 9), Schedule = rep(c("Initial Touch", "Must Touch", "PunishInc", "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy", "NonMatchLocationDouble", "NonMatchLocationDoubleEasy"), each = 12), DaysNeeded = as.integer(NA))
-for (mouseid in 1:12){
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "Initial Touch", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "Initial Touch")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "Must Touch", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "Must Touch")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "PunishInc", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "PunishInc")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationSingle")    
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationSingle", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationSingle")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationDouble", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationDouble")
-        scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "MatchLocationDoubleEasy", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "MatchLocationDoubleEasy")
-    scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationDouble", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationDouble")
-        scheddf[scheddf$Mouse == mouseid & scheddf$Schedule == "NonMatchLocationDoubleEasy", 3] <- sum(setalltrim$Mouse == as.character(mouseid) & setalltrim$Schedule == "NonMatchLocationDoubleEasy")
-    }     
-
-scheddf[scheddf$DaysNeeded == 0,3] <- NA
-print(scheddf)
-#Note can use summary(scheddf[scheddf$Schedule == "PunishInc",]) to get mean and mediam number of days spent on #PunishInc or any other schedule of interest
-```
