@@ -11,25 +11,12 @@ Touchscreen Group 3 Performance
 ```{r set-options, echo = FALSE, cache = FALSE}
 options(width = 100)
 ```
-####Updated 10/22/14
-Changes since previous update:
--Added support for MatchLocationDouble schedule.
-
-
-####Updated 10/13/14
-Changes since previous update:
--Added support for NonMatchLocationSingle and NonMatchLocationDouble schedules.  Added error check for whether number of correction and correct corrections are nonzero.
-
-####Updated 9/29/14
-Changes since previous update:
--Modified to include ONLY hard trials if schedule is NonMatchTripleEasyHard or NonMatchFullEasyHard.  Easy trials are ignored for total trial count and percent correct.  Center touches ARE included, even if on easy trials.
-
 
 Analysis requires data from 2 sources, and formatting is restricted.
 
-1. ABETII event total output: Event totals from each daily session must be present in the working directory of this script in a folder called "raw".  Session files must be named as |4DigitYear||2DigitMonth||2DigitDay||Set1-3|_Group3.csv.  Verify manually that session info is deleted from the header of the csv files.  Headers should appear in row 2.
+1. ABETII event total output: Event totals from each daily session must be present in a folder called "raw" that resides in the parent directory of this file.  Session files must be named as |4DigitYear||2DigitMonth||2DigitDay||Set1-3|_Group3.csv.  Verify manually that session info is deleted from the header of the csv files.  Headers should appear in row 2.
 
-2. Schedule sheet: A csv file Data Summary.csv containing the Date, RunDay, Mouse, and Schedule info for each session must be in the working directory.  These must be updated manually to reflect decisions to move mice between schedules.
+2. Schedule sheet: A csv file Data Summary.csv containing the Date, RunDay, Mouse, and Schedule info for each session must be in the working directory.  These must be updated manually to reflect decisions to move mice between schedules.  For every existing event total in 1, corresponding data MUST exist for that date in the Data Summary sheet.  If there are any days missing on the Data Summary sheet, it will crash.
 
 Mouse identities in the ABETII event total sheet are assumed to be, from leftmost to rightmost column:
 
@@ -39,7 +26,13 @@ Mouse identities in the ABETII event total sheet are assumed to be, from leftmos
 
 Any changes to these identities (e.g. due to box failures that require running elsewhere) should be manually adjusted in the output files themselves and noted prior to analysis.
 
-At present only PunishIncorrect and above schedules can be analyzed.  Initial Touch and Must Touch will appear in the output csv files as all zero  or missing values.
+Prior to Punish Incorrect, performance will appear as 100% because there's no real way to get these trials wrong.  For all later schedules, percentall indicates the total percentage of correct trials, including correction trials.
+
+The following R packages are required:
+-base
+-plyr
+-ggplot2
+-RColorBrewer
 
 ### Take inventory of files in raw directory and extract dates to report on.
 
