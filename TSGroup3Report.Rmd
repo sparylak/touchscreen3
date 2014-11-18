@@ -54,7 +54,7 @@ schedinfo <- read.csv(file = "../Data Summary.csv", header = TRUE, sep = ",", st
 schedinfo$Date <- as.Date(schedinfo$Date, format = "%m/%d/%Y")
 schedtrim <- schedinfo[schedinfo$Date %in% datestouse ,1:4]
 #Mice are not integers
-schedtrim$Mouse <- as.character(schedtrim$Mouse)
+schedtrim$Mouse <- factor(as.character(schedtrim$Mouse), levels = c("1","2","3","4","5","6","7","8","9","10","11","12"))
 #Print extracted info for first day
 print(head(schedtrim,12))
 #Print extracted info for last day
@@ -181,8 +181,8 @@ setalltrim$percentcorr <- 100*(setalltrim$correctcorr)/(setalltrim$corrtrials)
 
 ##Print summary measures for first day
 print(head(setalltrim,12))
-##Print summary measures for last 2 days
-print(tail(setalltrim,24))
+##Print summary measures for last day
+print(tail(setalltrim,12))
 ```
 
 ### Export summary measure output to new csv file
@@ -204,7 +204,7 @@ print(p)
 ```
 
 ###output graph of percent correct for just the most recent 3 days
-```{r}
+```{r fig.width = 10, fig.height = 8}
 last3days <- setalltrim$Date %in% tail(setalltrim$Date,36)
 setall3 <- setalltrim[last3days,]
 g<- ggplot(setall3, aes(x= Date, y = percentall, group = Mouse))
@@ -213,34 +213,24 @@ print(p)
 ```
 
 ###output individual graphs of number of trials completed by mouse, colored by schedule
-```{r}
+```{r fig.width = 10, fig.height = 8}
 setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc",  "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy","NonMatchLocationDouble", "NonMatchLocationDoubleEasy"))
-for (mouseid in 1:12){
-    setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
-gmouseid <- ggplot(setallmouseid, aes(x = Date, y = totaltrials))
-pmouseid <- gmouseid + geom_point(aes(color = Schedule), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle(paste("Mouse",mouseid, sep = " ")) + coord_cartesian(ylim = c(0,105))
-    print(pmouseid)
-}
+g <- ggplot(setalltrim, aes(x = Date, y = totaltrials)) + geom_point(aes(color = Schedule), size = 3) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle("Total Trials") + coord_cartesian(ylim = c(0,105)) + facet_grid(Mouse ~ .) + facet_wrap(~ Mouse, ncol = 3)
+print(g)
 ```
 
 ###output graph of percent correct for each mouse individually, colored by schedule
-```{r}
-for (mouseid in 1:12){
-    setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
-    gmouseid2 <- ggplot(setallmouseid, aes(x = Date, y = percentall))
-    pmouseid2 <- gmouseid2 + geom_point(aes(color = Schedule), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle(paste("Mouse",mouseid, sep = " ")) + coord_cartesian(ylim = c(0,105))
-    print(pmouseid2)
-}
+```{r fig.width = 10, fig.height = 8}
+setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc",  "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy","NonMatchLocationDouble", "NonMatchLocationDoubleEasy"))
+g <- ggplot(setalltrim, aes(x = Date, y = percentall)) + geom_point(aes(color = Schedule), size = 3) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle("% Correct Over All Trials") + coord_cartesian(ylim = c(0,105)) + facet_grid(Mouse ~ .) + facet_wrap(~ Mouse, ncol = 3)
+print(g)
 ```
 
 ###output correct FIRST TIME RESPONSES for each mouse, colored by schedule
-```{r}
-for (mouseid in 1:12){
-    setallmouseid <- setalltrim[setalltrim$Mouse == as.character(mouseid),]
-    gmouseid3 <- ggplot(setallmouseid, aes(x = Date, y = percentfirst))
-    pmouseid3 <- gmouseid3 + geom_point(aes(color = Schedule), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle(paste("Mouse",mouseid, sep = " ")) + coord_cartesian(ylim = c(0,100))
-    print(pmouseid3)
-}
+```{r fig.width = 10, fig.height = 8}
+setalltrim$Schedule <- factor(setalltrim$Schedule, levels = c("Initial Touch", "Must Touch", "PunishInc",  "MatchLocationSingle", "NonMatchLocationSingle", "MatchLocationDouble", "MatchLocationDoubleEasy","NonMatchLocationDouble", "NonMatchLocationDoubleEasy"))
+g <- ggplot(setalltrim, aes(x = Date, y = percentfirst)) + geom_point(aes(color = Schedule), size = 3) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle("% Correct Non-Correction Trials") + coord_cartesian(ylim = c(0,105)) + facet_grid(Mouse ~ .) + facet_wrap(~ Mouse, ncol = 3)
+print(g)
 ```
 
 ###Display mean performance across blocks of 5 days
