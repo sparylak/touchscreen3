@@ -29,6 +29,7 @@ Any changes to these identities (e.g. due to box failures that require running e
 Prior to Punish Incorrect, performance will appear as 100% because there's no real way to get these trials wrong.  For all later schedules, percentall indicates the total percentage of correct trials, including correction trials.
 
 The following R packages are required:
+
 - base
 - plyr
 - ggplot2
@@ -38,7 +39,7 @@ The following R packages are required:
 
 ```{r}
 # determine files to use
-filestouse <- list.files(path = "../raw/", pattern = "csv")
+filestouse <- list.files(path = "../raw/", pattern = "Group3.csv")
 # Strip dates and set information from raw output files
 datestouse <- unique(as.Date(gsub("Set[1-3]_Group3.csv|Set[1-3].csv", "", filestouse), format = "%Y%m%d"))
 print(filestouse)
@@ -235,7 +236,7 @@ print(g)
 
 ###Display mean performance across blocks of 5 days
 ```{r}
-setalltrim$Block <- as.factor(cut(setalltrim$DaysOnSchedule, c(1,5,10,15,20,25,30), include.lowest = TRUE, labels = FALSE))
+setalltrim$Block <- as.factor(cut(setalltrim$DaysOnSchedule, c(1,6,11,16,21,26,31), include.lowest = TRUE, right = FALSE, labels = FALSE))
 library(plyr)
 blockedmeans<- ddply(setalltrim, .(Mouse, Schedule, Block), summarize, blockedmean = mean(percentall))
 blockedmeansshort <- blockedmeans[(blockedmeans$Schedule != "Initial Touch" & blockedmeans$Schedule != "Must Touch"),]
