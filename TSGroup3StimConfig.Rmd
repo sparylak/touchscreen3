@@ -13,11 +13,6 @@ Files to use are pulled from a subfolder "raw" under the directory:
 
 Complete sets of mice are not required, as each session is processed individually.
 
-
-Known issues:
--Plot of binned performance across 15-trial blocks includes only Sample 3 Correct 1 combo and does not separate match from NonMatch
-
-
 ```{r}
 filestouse <-{}
 for(mouse in 1:12){
@@ -125,7 +120,7 @@ for(fil in filestouse){
 }
 ```
 
-###Cut dfkeep into blocks of 50 trials, and display performance for each schedule across trial blocks
+###Cut into blocks of 50 trials, and display performance for each schedule across trial blocks
 ```{r fig.height = 8, fig.width = 10}
 dfkeep$trialblock <- as.factor(cut(dfkeep$totaltrials, breaks = 50*(0:12), include.lowest = TRUE, labels = FALSE))
 blockeddf<- ddply(dfkeep, .(mouse, schedule, trialblock), summarize, totalcorrect = sum(correct), trials = (max(totaltrials)))
@@ -135,35 +130,36 @@ blockeddf$mouse <- as.factor(blockeddf$mouse)
 library(ggplot2)
 g <- ggplot(blockeddf, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
 print(g)
-###this is nice, but what about individual stimulus combos?
 
-s3c1 <- dfkeep[(dfkeep$correctgrid == 1 & dfkeep$samplegrid == 3),]
-s3c1 <- s3c1[grepl(pattern = "Double", x = s3c1$schedule),]
+###this sections is experimental, looking at particular combinations across days
+
+#s3c1 <- dfkeep[(dfkeep$correctgrid == 1 & dfkeep$samplegrid == 3),]
+#s3c1 <- s3c1[grepl(pattern = "Double", x = s3c1$schedule),]
 #currently this wipes out the original trial number and counts only trials of the same stimulus configuration type
-stimrows <- length(s3c1$mouse)
-for(row in 1:stimrows){
+#stimrows <- length(s3c1$mouse)
+#for(row in 1:stimrows){
     ###need to somehow mark transition points between mice, schedules without excessive forloops???
-    if(row == 1){
-            s3c1$totaltrials[row] <- s3c1$correct[row] + s3c1$incorrect[row] 
-        } else if ((s3c1$mouse[row] == s3c1$mouse[row - 1]) & (s3c1$schedule[row] == s3c1$schedule[row - 1])){
-            s3c1$totaltrials[row] <- s3c1$totaltrials[row - 1] + s3c1$correct[row] + s3c1$incorrect[row]
-        } else {s3c1$totaltrials[row] <- s3c1$correct[row] + s3c1$incorrect[row]}
-    }
+#    if(row == 1){
+#            s3c1$totaltrials[row] <- s3c1$correct[row] + s3c1$incorrect[row] 
+ #       } else if ((s3c1$mouse[row] == s3c1$mouse[row - 1]) & (s3c1$schedule[row] == s3c1$schedule[row - 1])){
+ #           s3c1$totaltrials[row] <- s3c1$totaltrials[row - 1] + s3c1$correct[row] + s3c1$incorrect[row]
+ #       } else {s3c1$totaltrials[row] <- s3c1$correct[row] + s3c1$incorrect[row]}
+#    }
 ###with 6 differet stimulus configuations, number of trials at each is limited.  breaks are thus blocks of 15 trials here vs. 50 trials when all combos are lumped together
-s3c1$trialblock <- as.factor(cut(s3c1$totaltrials, breaks = 15*(0:10), include.lowest = TRUE, labels = FALSE))
+#s3c1$trialblock <- as.factor(cut(s3c1$totaltrials, breaks = 15*(0:10), include.lowest = TRUE, labels = FALSE))
 ###graph it!
-stimblocked<- ddply(s3c1, .(mouse, schedule, trialblock), summarize, totalcorrect = sum(correct), trials = (max(totaltrials)))
-stimblocked$trials <- stimblocked$trials - 15*(as.integer(stimblocked$trialblock)-1)
-stimblocked$percentall <- stimblocked$totalcorrect/stimblocked$trials
-stimblocked$mouse <- as.factor(stimblocked$mouse)
-library(ggplot2)
-g <- ggplot(stimblocked, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
-print(g)
+#stimblocked<- ddply(s3c1, .(mouse, schedule, trialblock), summarize, totalcorrect = sum(correct), trials = (max(totaltrials)))
+#stimblocked$trials <- stimblocked$trials - 15*(as.integer(stimblocked$trialblock)-1)
+#stimblocked$percentall <- stimblocked$totalcorrect/stimblocked$trials
+#stimblocked$mouse <- as.factor(stimblocked$mouse)
+#library(ggplot2)
+#g <- ggplot(stimblocked, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
+#print(g)
 
 
 ```
 
-###Save output?
+###Save output
 
 ```{r}
 ###Save output files to output directory
@@ -173,31 +169,45 @@ write.csv(totalskeep, file = paste("../output/", Sys.Date(),".combooutput.csv", 
 
 ###Is the proportion of correct and incorrect trials equal across all sample and correct grid combinations?
 
-Equality of performance across stimulus combinations will be checked via Pearson's chi-squared test. Subsequently, each stimulus configuration can be checked separately to determine if responding differs from chance performance, assumed to be 50%.
+Equality of performance across stimulus combinations will be checked via Pearson's chi-squared test. Subsequently, each stimulus configuration can be checked separately to determine if responding differs from chance performance, assumed to be 50%.  Grid 1 is the left side, 2 is the center, and 3 is the right.
 
+**Warning: For Match mice on schedules EXCEPT MatchLocationDoubleEasy, the Correct_Grid_Position actually indicates the foil, and the Incorrect_Grid_Position is the blank.  This was confusing terminology fixed in DoubleEasy schedules.  So the comma notation refers to the following: **
+
+ - MatchLocationDouble (Location In Sample, Foil Appearing In Choice)
+ - NonMatchLocationDouble (Location In Sample, Correct Location in Choice)
+ - MatchLocationDoubleEasy and NonMatchLocationDoubleEasy (Location in Sample, Correction Location in Choice)
 
 ```{r}
-###Perform chi-squared tests for each image/side combo
-###Note that initial chi-squared across groups compares independence of distributions, whereas
-###chi-squared tests of individual rows compare correct vs. incorrect responding to a hypothetical 50% chance 
+###Total correct vs. incorrect responses across all trials for each schedule and stimulus location combo.
 combotabslong <- ddply(totalskeep, .(schedule, correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
 print(combotabslong)
-###Across all possible configurations, collapsing across schedules
+###Tally data from nonmatch schedules
 ###WARNING:  In Match schedules up to but not including DoubleEasy, "Correct_Grid_Position" actually refers to location of the foil
 combotabsnonmatch <- ddply(totalskeep[grep("^NonMatchLocationDouble", totalskeep$schedule),], .(correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
 print(combotabsnonmatch)
+###Perform chi-squared tests for schedule/side combos
+###Note that initial chi-squared across groups compares independence of distributions, whereas
+###chi-squared tests of individual rows compare correct vs. incorrect responding to a hypothetical 50% chance 
 print(chisq.test(combotabsnonmatch[,4:5]))
-
+###Tally data from match schedules
 combotabsmatch <- ddply(totalskeep[grep("^MatchLocationDouble", totalskeep$schedule),], .(correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
 print(combotabsmatch)
+###Perform chi-squared tests for schedule/side combos
+###Note that initial chi-squared across groups compares independence of distributions, whereas
+###chi-squared tests of individual rows compare correct vs. incorrect responding to a hypothetical 50% chance 
 print(chisq.test(combotabsmatch[,4:5]))
-
 ```
 
 **A large disparity exists in responding to different configurations.**
 
 
-**Note that for Match mice, the Correct_Grid_Position actually indicates, the foil, and the Incorrect_Grid_Position is the blank.  So the comma notation refers to the following: (ImageAppearingInSample,ImageAppearingInChoiceOnly)**
+###Graph individual stimulus combinations.###
+
+**Warning: For Match mice on schedules EXCEPT MatchLocationDoubleEasy, the Correct_Grid_Position actually indicates the foil, and the Incorrect_Grid_Position is the blank.  This was confusing terminology fixed in DoubleEasy schedules.  So the comma notation refers to the following: **
+
+ - MatchLocationDouble (Location In Sample, Foil Appearing In Choice)
+ - NonMatchLocationDouble (Location In Sample, Correct Location in Choice)
+ - MatchLocationDoubleEasy and NonMatchLocationDoubleEasy (Location in Sample, Correction Location in Choice)
 
 ```{r fig.height = 8, fig.width = 10}
 
@@ -207,7 +217,7 @@ bymouseeasy <- ddply(easy, .(mouse, schedule, correctgrid, samplegrid), summariz
 bymouseeasy$trialcode <- paste(bymouseeasy$samplegrid,bymouseeasy$correctgrid, sep = ",")
 bymouseeasy$trialcode <- factor(bymouseeasy$trialcode, levels = c("1,1","3,1","1,3","3,3"))
 library(ggplot2)
-g <- ggplot(bymouseeasy, aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.1)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Mice on Easy Schedules have strong Left side biases")
+g <- ggplot(bymouseeasy, aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.1)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Better Performance to a Particular Combination Indicates Side Bias")
 print(g)
 
 noteasy <- totalskeep[grep("Easy|Single", totalskeep$schedule, invert = TRUE),]
@@ -215,20 +225,23 @@ bymouse <- ddply(noteasy, .(mouse, schedule, correctgrid, samplegrid), summarize
 bymouse$trialcode <- paste(bymouse$samplegrid,bymouse$correctgrid, sep = ",")
 bymouse$trialcode <- factor(bymouse$trialcode, levels = c("1,2","1,3","2,1","2,3","3,1","3,2"))
 library(ggplot2)
-g <- ggplot(bymouse[grep("^NonMatch", bymouse$schedule),], aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.10)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Mice on NonMatch Schedules also prefer left, except #3")
+g <- ggplot(bymouse[grep("^NonMatch", bymouse$schedule),], aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.10)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("NonMatch: Performance across stimulus configurations")
 print(g)
 
-g <- ggplot(bymouse[grep("^Match", bymouse$schedule),], aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.10)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Location preference not as clear in Match mice.  #2 prefers center, #7 prefers left, #8 dislikes center")
+g <- ggplot(bymouse[grep("^Match", bymouse$schedule),], aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.10)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Match: Performance across stimulus configurations")
 print(g)
 ```
 
-**Across mice, the side preference appears more robust and consistent than the image preference.**
+###Sequential Correction Trials###
+
+Note: sequential correction trials on Easy are currently capped at 3 (corresponding to 4 incorrects in a row), at which point a new random Sample_Grid_Position and Correct_Grid_Position are drawn. There is a 50% probability that the mouse will receive the same trial configuration again during the random draw, making sequential incorrect trials of >4 possible.
+
 
 ```{r fig.height = 8}
 ###Output histogram of incorrect responses per correct, excluding zero-incorrect sequences.
 dfincorrect <- dfkeep[dfkeep$incorrect != 0,]
 dfdoubleinc <- dfincorrect[grepl(pattern = "Double", dfincorrect$schedule),]
 inccount <- count(dfdoubleinc, vars = .(incorrect))
-g<- ggplot(inccount, aes(x = incorrect, y = freq)) + geom_point(size = 4)
+g<- ggplot(inccount, aes(x = incorrect, y = freq)) + geom_point(size = 4) + ggtitle("Frequency histogram of sequential incorrect responses across all sessions")
 print(g)
 ```
