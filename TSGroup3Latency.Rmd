@@ -15,7 +15,20 @@ Files to use are pulled from a subfolder "StimulusConfigData" under the director
 
 Complete sets of mice are not required, as each session is processed individually.
 
-Warning: Only raw files from MatchLocation and NonMatchLocation schedules can be processed.  Pretraining (Must Touch, PunishIncorrect) or object-based schedules will crash.
+Warning: Only raw files from MatchLocation and NonMatchLocation schedules can be processed.  Pretraining (Must Touch, PunishIncorrect) or object-based schedules will crash.  Ensure these are not in the StimulusConfigData directory, or if they are that they reside in a subfolder.
+
+3 output measures are analyzed:
+
+- SampleResponse = latency between trial initiation and touch to sample image
+- ChoiceInit = latency between sample response and initiation of choice phase
+- ChoiceResponse = latency betweeen initiation of sample phase and touch to choice image
+
+Required R packages:
+
+- base
+- plyr
+- ggplot2
+- RColorBrewer
 
 
 ```{r}
@@ -116,20 +129,23 @@ library(plyr)
 
 ```
 
-###Single schedules
+###Calculate latencies by schedule
 ```{r fig.height = 8, fig.width = 8}
 latsingle <- lattest[grep("Single", lattest$schedule),]
 library(ggplot2)
+library(RColorBrewer)
 ###graph 3 main response latency measures over single schedules
-g <- ggplot(latsingle) + geom_point(aes(x = "1:SampleResponse", y = sampleresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "2:ChoiceInit", y = choiceinitmedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "3:Choice Response", y = choiceresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + xlab(label = "") + ylab("Median Latency (s)")
+g <- ggplot(latsingle) + geom_point(aes(x = "1:SampleResponse", y = sampleresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "2:ChoiceInit", y = choiceinitmedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "3:Choice Response", y = choiceresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + xlab(label = "") + ylab("Median Latency (s)") + ggtitle("Median Response Latencies Across All Sessions")
 print(g)
+print(latsingle)
 latdouble <- lattest[grep("Double", lattest$schedule),]
 ###graph 3 main response latency measures over double schedules
-g <- ggplot(latdouble) + geom_point(aes(x = "1:SampleResponse", y = sampleresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "2:ChoiceInit", y = choiceinitmedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "3:Choice Response", y = choiceresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + xlab(label = "") + ylab("Median Latency (s)")
+g <- ggplot(latdouble) + geom_point(aes(x = "1:SampleResponse", y = sampleresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "2:ChoiceInit", y = choiceinitmedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + geom_point(aes(x = "3:Choice Response", y = choiceresponsemedian, color = schedule), position = position_jitter(w = 0.1), size = 4) + xlab(label = "") + ylab("Median Latency (s)") + ggtitle("Median Response Latencies Across All Sessions")
 print(g)
+print(latdouble)
 ```
 
-###More detailed breakdown of latency to initiate choice over last 7 calendar days
+###Latency to initiate choice over last 7 calendar days
 ```{r fig.height = 8, fig.width = 8}
 g<- ggplot(lattest7, aes(x = date, y = choiceinitmedian, color = mouse)) + geom_point(position = position_jitter(w=0.1), size = 4) + scale_color_brewer(type = "qual", palette = "Paired") + ylab("Median latency to initiate choice (s)")
 print(g)
