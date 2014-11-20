@@ -100,9 +100,15 @@ for(fil in filestouse){
     } else {
         latdf$choiceinit <- tempfile[tempfile$Item_Name == "Display Choice Images",1]
     }
+    ###DELETE THIS IF CLAUSE IF IT DOESN'T WORK WITH NEW MUST SCHEDULES###
+    if(sessionsched %in% c("MatchLocationDoubleMust","NonMatchLocationDoubleMust")){
+         choicelat <- tempfile[tempfile$Item_Name == "Correct",1]
+         
+    } else {
     corlat <- tempfile[tempfile$Item_Name == "Correct",1]
     incorlat <- tempfile[tempfile$Item_Name == "Incorrect",1]
     choicelat <- sort(append(corlat, incorlat))
+    }
     if(length(choicelat) != initiated1) {choicelat <- append(choicelat, 3600)}
     latdf$choiceresponse <- choicelat
     latdf$correct <- (latdf$choiceresponse %in% corlat)
