@@ -163,8 +163,12 @@ print(tail(setalltrim,12))
 setalltrim[is.na(setalltrim)] <- 0
 ##totaltrials
 setalltrim$totaltrials <- (setalltrim$totalcorrect + setalltrim$incorrect)
+##reassign totaltrials to totalcorrect for DoubleMust schedules
+setalltrim[setalltrim$Schedule %in% c("MatchLocationDoubleMust","NonMatchLocationDoubleMust"),11] <- setalltrim[setalltrim$Schedule %in% c("MatchLocationDoubleMust","NonMatchLocationDoubleMust"),6]
 ##noncorrtrials
 setalltrim$noncorrtrials <- (setalltrim$totaltrials - setalltrim$corrtrials)
+##reassign noncorrtrials to totalcorrect for DoubleMust schedules
+setalltrim[setalltrim$Schedule %in% c("MatchLocationDoubleMust","NonMatchLocationDoubleMust"),12] <- setalltrim[setalltrim$Schedule %in% c("MatchLocationDoubleMust","NonMatchLocationDoubleMust"),6]
 ##incorrectcorr
 setalltrim$incorrectcorr <- (setalltrim$corrtrials - setalltrim$correctcorr)
 ##firstcorr
