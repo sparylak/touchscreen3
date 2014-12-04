@@ -236,6 +236,15 @@ g <- ggplot(setalltrim, aes(x = Date, y = percentfirst)) + geom_point(aes(color 
 print(g)
 ```
 
+###output total incorrect responses for each mouse, colored by schedule
+
+Note that for DoubleMust schedules, the incorrect responses reflect only incorrect responses to the foil and not to the blank square.  On DoubleMust schedules, incorrect responses also do not result in the end of the trial.
+
+```{r fig.width = 10, fig.height = 8}
+g <- ggplot(setalltrim, aes(x = Date, y = incorrect)) + geom_point(aes(color = Schedule), size = 3) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle("Total Incorrect Responses") + coord_cartesian(ylim = c(0,105)) + facet_grid(Mouse ~ .) + facet_wrap(~ Mouse, ncol = 3)
+print(g)
+```
+
 ###Display mean performance across blocks of 5 days
 ```{r}
 setalltrim$Block <- as.factor(cut(setalltrim$DaysOnSchedule, c(1,6,11,16,21,26,31), include.lowest = TRUE, right = FALSE, labels = FALSE))
