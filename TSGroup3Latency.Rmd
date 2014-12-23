@@ -124,7 +124,7 @@ for(fil in filestouse){
     dfkeep$choiceinitlat <- dfkeep$choiceinit - dfkeep$sampleresponse
     dfkeep$choiceresponselat <- dfkeep$choiceresponse - dfkeep$choiceinit
 ###keep separate data frame for most recent 7 calendar days
-    dfkeep7 <- dfkeep[dfkeep$date > (Sys.Date() - 8),]
+    dfkeep7 <- dfkeep[dfkeep$date > (Sys.Date() - 15),]
 
 library(plyr)
 ###summarize response latencies, split by mouse and schedule, over all time
