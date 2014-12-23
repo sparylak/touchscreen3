@@ -245,6 +245,13 @@ g <- ggplot(setalltrim, aes(x = Date, y = incorrect)) + geom_point(aes(color = S
 print(g)
 ```
 
+###output total correct responses for each mouse, colored by schedule
+
+```{r fig.width = 10, fig.height = 8}
+g <- ggplot(setalltrim, aes(x = Date, y = totalcorrect)) + geom_point(aes(color = Schedule), size = 3) + scale_colour_brewer(type = "qual", palette = "Paired") + ggtitle("Total Correct Responses") + coord_cartesian(ylim = c(0,105)) + facet_grid(Mouse ~ .) + facet_wrap(~ Mouse, ncol = 3)
+print(g)
+```
+
 ###Display mean performance across blocks of 5 days
 ```{r}
 setalltrim$Block <- as.factor(cut(setalltrim$DaysOnSchedule, c(1,6,11,16,21,26,31), include.lowest = TRUE, right = FALSE, labels = FALSE))
