@@ -132,6 +132,24 @@ g <- ggplot(blockeddf, aes(x = trialblock, y = percentall, group = mouse)) + geo
 print(g)
 ```
 
+###the last 100 trials
+ 
+
+```{r fig.height = 8, fig.width = 10}
+###Note, this is only approximately the last 100 trials...because of the way the data table is constructed, rows where a mouse made several incorrect responses lump several trials together.  however, the cutoff for incorrect trials before drawing a new location is 4 on EASY, so totals should deviate from 100 by max 4 trials
+last <- data.frame(date = {}, mouse = {}, schedule = {}, correctgrid = {}, samplegrid = {}, correct = {}, incorrect = {}, totaltrials = {}, trialblock = {})
+for (mouse in 1:12) {
+    justone <- dfkeep[dfkeep$mouse == mouse,]
+    justone <- justone[justone$totaltrials > (max(justone[8]-100)),]
+    last<- rbind(last,justone)
+}
+last100 <- ddply(last, .(mouse,schedule,correctgrid), summarize, totalcorrect = sum(correct), trials = (totalcorrect + sum(incorrect) ), percent = totalcorrect/trials)
+last100$mouse <- as.factor(last100$mouse)
+last100$correctgrid <- as.factor(last100$correctgrid)
+g<- ggplot(last100, aes(x = correctgrid, y = percent)) + geom_point(aes(color = mouse), size = 4) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(.~ schedule) +coord_cartesian(ylim = c(0,1))
+print(g)
+```
+
 ###Save output
 
 ```{r}
