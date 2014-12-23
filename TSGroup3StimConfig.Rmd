@@ -120,43 +120,16 @@ for(fil in filestouse){
 }
 ```
 
-###Cut into blocks of 50 trials, and display performance for each schedule across trial blocks
+###Cut into blocks of 100 trials, and display performance for each schedule across trial blocks
 ```{r fig.height = 8, fig.width = 10}
-dfkeep$trialblock <- as.factor(cut(dfkeep$totaltrials, breaks = 50*(0:12), include.lowest = TRUE, labels = FALSE))
+dfkeep$trialblock <- as.factor(cut(dfkeep$totaltrials, breaks = 100*(0:12), include.lowest = TRUE, labels = FALSE))
 blockeddf<- ddply(dfkeep, .(mouse, schedule, trialblock), summarize, totalcorrect = sum(correct), trials = (max(totaltrials)))
-blockeddf$trials <- blockeddf$trials - 50*(as.integer(blockeddf$trialblock)-1)
+blockeddf$trials <- blockeddf$trials - 100*(as.integer(blockeddf$trialblock)-1)
 blockeddf$percentall <- blockeddf$totalcorrect/blockeddf$trials
 blockeddf$mouse <- as.factor(blockeddf$mouse)
 library(ggplot2)
 g <- ggplot(blockeddf, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
 print(g)
-
-###this sections is experimental, looking at particular combinations across days
-
-#s3c1 <- dfkeep[(dfkeep$correctgrid == 1 & dfkeep$samplegrid == 3),]
-#s3c1 <- s3c1[grepl(pattern = "Double", x = s3c1$schedule),]
-#currently this wipes out the original trial number and counts only trials of the same stimulus configuration type
-#stimrows <- length(s3c1$mouse)
-#for(row in 1:stimrows){
-    ###need to somehow mark transition points between mice, schedules without excessive forloops???
-#    if(row == 1){
-#            s3c1$totaltrials[row] <- s3c1$correct[row] + s3c1$incorrect[row] 
- #       } else if ((s3c1$mouse[row] == s3c1$mouse[row - 1]) & (s3c1$schedule[row] == s3c1$schedule[row - 1])){
- #           s3c1$totaltrials[row] <- s3c1$totaltrials[row - 1] + s3c1$correct[row] + s3c1$incorrect[row]
- #       } else {s3c1$totaltrials[row] <- s3c1$correct[row] + s3c1$incorrect[row]}
-#    }
-###with 6 differet stimulus configuations, number of trials at each is limited.  breaks are thus blocks of 15 trials here vs. 50 trials when all combos are lumped together
-#s3c1$trialblock <- as.factor(cut(s3c1$totaltrials, breaks = 15*(0:10), include.lowest = TRUE, labels = FALSE))
-###graph it!
-#stimblocked<- ddply(s3c1, .(mouse, schedule, trialblock), summarize, totalcorrect = sum(correct), trials = (max(totaltrials)))
-#stimblocked$trials <- stimblocked$trials - 15*(as.integer(stimblocked$trialblock)-1)
-#stimblocked$percentall <- stimblocked$totalcorrect/stimblocked$trials
-#stimblocked$mouse <- as.factor(stimblocked$mouse)
-#library(ggplot2)
-#g <- ggplot(stimblocked, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse)) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(schedule ~ . ) + facet_wrap( ~ schedule, ncol = 2)
-#print(g)
-
-
 ```
 
 ###Save output
@@ -236,6 +209,22 @@ bymousemust <- ddply(must, .(mouse, schedule, correctgrid, samplegrid), summariz
 bymousemust$trialcode <- paste(bymousemust$samplegrid,bymousemust$correctgrid, sep = ",")
 bymousemust$trialcode <- factor(bymousemust$trialcode, levels = c("1,1","1,3","3,1","3,3"))
 g <- ggplot(bymousemust, aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.10)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Must: Performance across stimulus configurations")
+print(g)
+```
+
+###Side bias by block
+
+Do side biases become more or less pronounced with increased completed trials?
+
+```{r fig.height = 8, fig.width = 10}
+###Output graph of percent correct across BLOCKS for each combination of schedule and grid position
+###Note that blocks of 100 trials are agnostic to which location was correct.  Thus, do not assume that equal proportions of trials at each position were completed in each block.
+ 
+biasblocked <- ddply(dfkeep, .(mouse, schedule, trialblock, correctgrid, samplegrid), summarize, totalcorrect = sum(correct), totalincorrect = sum(incorrect), trials = (totalcorrect + totalincorrect))
+biasblocked$percentall <- biasblocked$totalcorrect/biasblocked$trials
+biasblocked$mouse <- as.factor(biasblocked$mouse)
+biasblocked$correctgrid <- as.factor(biasblocked$correctgrid)
+g <- ggplot(biasblocked, aes(x = trialblock, y = percentall, group = mouse)) + geom_point(aes(color = mouse), size = 4) + geom_line(aes(color = mouse), size = 1.5) + scale_colour_brewer(type = "qual", palette = "Paired") + facet_grid(correctgrid ~ schedule )
 print(g)
 ```
 
