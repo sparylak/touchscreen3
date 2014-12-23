@@ -220,7 +220,7 @@ library(ggplot2)
 g <- ggplot(bymouseeasy, aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.1)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Better Performance to a Particular Combination Indicates Side Bias")
 print(g)
 
-noteasy <- totalskeep[grep("Easy|Single", totalskeep$schedule, invert = TRUE),]
+noteasy <- totalskeep[grep("Easy|Single|Must", totalskeep$schedule, invert = TRUE),]
 bymouse <- ddply(noteasy, .(mouse, schedule, correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
 bymouse$trialcode <- paste(bymouse$samplegrid,bymouse$correctgrid, sep = ",")
 bymouse$trialcode <- factor(bymouse$trialcode, levels = c("1,2","1,3","2,1","2,3","3,1","3,2"))
@@ -229,6 +229,13 @@ g <- ggplot(bymouse[grep("^NonMatch", bymouse$schedule),], aes(x = trialcode, y 
 print(g)
 
 g <- ggplot(bymouse[grep("^Match", bymouse$schedule),], aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.10)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Match: Performance across stimulus configurations")
+print(g)
+
+must <- totalskeep[grep("Must", totalskeep$schedule),]
+bymousemust <- ddply(must, .(mouse, schedule, correctgrid, samplegrid), summarize, totaltrials = sum(trialcount), correct = sum(correcttotal), incorrect = sum(incorrecttotal), meanalldays = (correct/(correct+incorrect)))
+bymousemust$trialcode <- paste(bymousemust$samplegrid,bymousemust$correctgrid, sep = ",")
+bymousemust$trialcode <- factor(bymousemust$trialcode, levels = c("1,1","1,3","3,1","3,3"))
+g <- ggplot(bymousemust, aes(x = trialcode, y = meanalldays)) + geom_point(aes(color = schedule),size = 4) + geom_text(aes(x = trialcode, y = -0.05, label = totaltrials)) + coord_cartesian(ylim = c(-.1,1.10)) + facet_wrap(~ mouse, ncol = 2) + ggtitle("Must: Performance across stimulus configurations")
 print(g)
 ```
 
