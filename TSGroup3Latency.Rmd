@@ -151,9 +151,76 @@ print(g)
 print(latdouble)
 ```
 
-###Latency to initiate choice over last 7 calendar days
+###Latency to initiate choice over last 14 calendar days
 ```{r fig.height = 8, fig.width = 8}
 g<- ggplot(lattest7, aes(x = date, y = choiceinitmedian, color = mouse)) + geom_point(position = position_jitter(w=0.1), size = 4) + scale_color_brewer(type = "qual", palette = "Paired") + ylab("Median latency to initiate choice (s)")
 print(g)
 print(lattest7[,c(1:3,6:7,10)])
 ```
+
+
+###Check incorrect vs. correct latencies only in promising mice.  Subset data first.
+
+```{r}
+###Subset data to include only mice with promising performance, and only on days since promising performance has been observed.
+recent5<- dfkeep[(dfkeep$mouse == 5) & (dfkeep$date >= "2014-12-11"),]
+###Print session dates used for each mouse
+print(unique(recent5[,1]))
+```
+
+###Summarize performance over analysis period
+
+```{r}
+###Report correct, incorrect, total trials, and perecent correct over analyzed time period for each mouse
+print(c(sum(recent5$correct == TRUE),sum(recent5$correct == FALSE),length(recent5$correct),sum(recent5$correct)/length(recent5$correct)))
+```
+
+###Latencies over correct vs. incorrect trials
+
+```{r}
+###perform t tests over all trials in analysis period for each mouse separately, compare choice initiation latencies for correct (x) vs. incorrect (y) trials
+t.test(recent5[recent5$correct == TRUE,10], recent5[recent5$correct == FALSE,10])
+###Repeat analysis with a non-parametric test
+wilcox.test(recent5[recent5$correct == TRUE,10], recent5[recent5$correct == FALSE,10])
+print(c(median(recent5[recent5$correct == TRUE,10]), median(recent5[recent5$correct == FALSE,10])))
+```
+
+###Graph latencies by trial outcome and mouse
+
+```{r}
+g<- ggplot(recent5, aes(x = correct, y = choiceinitlat)) + geom_point() + geom_jitter(width = .15) + ggtitle("Mouse 5")
+print(g)
+```
+
+###Sample response Latencies over correct vs. incorrect trials
+
+```{r}
+###perform t tests over all trials in analysis period for each mouse separately, compare sample response latencies for correct (x) vs. incorrect (y) trials
+t.test(recent5[recent5$correct == TRUE,9], recent5[recent5$correct == FALSE,9])
+###Repeat analysis with a non-parametric test
+wilcox.test(recent5[recent5$correct == TRUE,9], recent5[recent5$correct == FALSE,9])
+print(c(median(recent5[recent5$correct == TRUE,9]), median(recent5[recent5$correct == FALSE,9])))
+```
+
+###Graph latencies by trial outcome and mouse
+
+```{r}
+g<- ggplot(recent5, aes(x = correct, y = sampleresponselat)) + geom_point() + geom_jitter(width = .15) + ggtitle("Mouse 5")
+print(g)
+```
+
+###Choice response latencies over correct vs. incorrect trials
+
+```{r}
+###perform t tests over all trials in analysis period for each mouse separately, compare sample response latencies for correct (x) vs. incorrect (y) trials
+t.test(recent5[recent5$correct == TRUE,11], recent5[recent5$correct == FALSE,11])
+###Repeat analysis with a non-parametric test
+wilcox.test(recent5[recent5$correct == TRUE,11], recent5[recent5$correct == FALSE,11])
+print(c(median(recent5[recent5$correct == TRUE,11]), median(recent5[recent5$correct == FALSE,11])))
+```
+
+###Graph latencies by trial outcome and mouse
+
+```{r}
+g<- ggplot(recent5, aes(x = correct, y = choiceresponselat)) + geom_point() + geom_jitter(width = .15) + ggtitle("Mouse 5")
+print(g)
