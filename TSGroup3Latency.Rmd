@@ -30,6 +30,7 @@ Required R packages:
 - ggplot2
 - RColorBrewer
 
+This line was added directly in github's built-in editor.
 
 ```{r}
 filestouse <- {}
